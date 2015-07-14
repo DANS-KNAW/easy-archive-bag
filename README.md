@@ -9,7 +9,7 @@ Send a bag to archival storage.
 SYNOPSIS
 --------
 
-    easy-archive-bag <bag directory> <easy-deposit service url>
+    easy-archive-bag <bag directory> [<storage-service-url>]
 
 
 DESCRIPTION
@@ -20,8 +20,8 @@ DESCRIPTION
 ARGUMENTS
 ---------
 
-* ``<bag directory>`` -- 
-* ``<easy-deposit service url>`` -- 
+* ``<bag directory>`` -- the directory on the local file system containing the bag
+* ``<storage-service-url>`` -- URL of a SWORD v2 service that stores the bag in archival storage
 
 
 INSTALLATION AND CONFIGURATION
