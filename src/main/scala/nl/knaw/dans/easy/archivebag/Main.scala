@@ -50,7 +50,7 @@ object Main {
     
     log.info("Sending bag to deposit service ...")
     val credsProv = new BasicCredentialsProvider
-    credsProv.setCredentials(new AuthScope("deasy", 8080), new UsernamePasswordCredentials("USER", "PASSWORD"))
+    credsProv.setCredentials(new AuthScope(storageServiceUrl.getHost, storageServiceUrl.getPort), new UsernamePasswordCredentials("USER", "PASSWORD"))
     val http = HttpClients.custom.setDefaultCredentialsProvider(credsProv).build()
     val post = new HttpPost(storageServiceUrl.toURI)
     post.addHeader("Content-Disposition", "attachment; filename=bag.zip")
