@@ -66,4 +66,6 @@ Steps:
         cd easy-archive-bag
         mvn install
 
+[EASY-BagIt]: http://easy.dans.knaw.nl/schemas/EASY-BagIt.html
+[SWORD v2]: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
 
