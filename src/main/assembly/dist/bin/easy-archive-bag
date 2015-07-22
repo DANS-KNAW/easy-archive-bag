@@ -1,0 +1,5 @@
+#!/bin/sh
+
+java -Dlogback.configurationFile=$EASY_ARCHIVE_BAG_HOME/cfg/logback.xml \
+     -Dconfig.file=$EASY_ARCHIVE_BAG_HOME/cfg/application.conf \
+     -jar $EASY_ARCHIVE_BAG_HOME/bin/easy-archive-bag.jar $@
