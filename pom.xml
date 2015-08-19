@@ -15,7 +15,7 @@
     </properties>
     <scm>
         <developerConnection>scm:git:https://github.com/DANS-KNAW/${project.artifactId}</developerConnection>
-        <tag>RELEASE-@{project.version}</tag>
+        <tag>RELEASE</tag>
     </scm>
     <dependencies>
         <dependency>
