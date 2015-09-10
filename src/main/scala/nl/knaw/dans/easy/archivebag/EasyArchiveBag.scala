@@ -18,6 +18,7 @@ package nl.knaw.dans.easy.archivebag
 
 import java.io.{ByteArrayOutputStream, File, FileInputStream, FileOutputStream, OutputStream}
 import java.math.BigInteger
+import java.net.URL
 import java.nio.file.Paths
 import java.security.{DigestOutputStream, MessageDigest}
 import java.util.zip.{ZipEntry, ZipOutputStream}
@@ -29,17 +30,35 @@ import org.apache.http.entity.{ContentType, FileEntity}
 import org.apache.http.impl.client.{BasicCredentialsProvider, HttpClients}
 import org.slf4j.LoggerFactory
 
-object Main {
+import scala.util.Try
+
+object Settings {
+  def apply(conf: Conf): Settings =
+    new Settings(
+      username = conf.username(),
+      password = conf.password(),
+      bagDir = conf.bagDirectory(),
+      storageDepositService =  conf.storageServiceUrl())
+}
+
+case class Settings(
+       username: String,
+       password: String,
+       bagDir: File,
+       storageDepositService: URL)
+
+object EasyArchiveBag {
   val log = LoggerFactory.getLogger(getClass)
   val EASY_BAGIT_URI = "http://easy.dans.knaw.nl/schemas/EASY-BagIt/2015-07-17"
+
   def main(args: Array[String]) {
     log.debug("Parsing command line arguments")
-    val opts = new Conf(args)
-    val bagDir = opts.bagDirectory()
-    val username = opts.username()
-    val password = opts.password()
-    val storageServiceUrl = opts.storageServiceUrl()
+    val conf = new Conf(args)
+    implicit val s = Settings(conf)
+    run.get
+  }
 
+  def run(implicit s: Settings): Try[String] = Try {
     log.debug("Generating unique temporary file name")
     val tempFile = File.createTempFile("easy-archive-bag", "zip")
     tempFile.delete()
@@ -47,16 +66,16 @@ object Main {
     log.debug("Zipping bag dir to file at {}", tempFile)
     val fos = new FileOutputStream(tempFile)
     val md5digest = MessageDigest.getInstance("MD5")
-    compressDirToOutputStream(bagDir, new DigestOutputStream(fos, md5digest))
+    compressDirToOutputStream(s.bagDir, new DigestOutputStream(fos, md5digest))
 
     val md5hex = new BigInteger(1, md5digest.digest).toString(16)
     log.debug("Content-MD5 = {}", md5hex)
 
-    log.info("Sending bag to {}, with user = {}, password = {}", storageServiceUrl, username, "*****")
+    log.info("Sending bag to {}, with user = {}, password = {}", s.storageDepositService, s.username, "*****")
     val credsProv = new BasicCredentialsProvider
-    credsProv.setCredentials(new AuthScope(storageServiceUrl.getHost, storageServiceUrl.getPort), new UsernamePasswordCredentials(username, password))
+    credsProv.setCredentials(new AuthScope(s.storageDepositService.getHost, s.storageDepositService.getPort), new UsernamePasswordCredentials(s.username, s.password))
     val http = HttpClients.custom.setDefaultCredentialsProvider(credsProv).build()
-    val post = new HttpPost(storageServiceUrl.toURI)
+    val post = new HttpPost(s.storageDepositService.toURI)
     post.addHeader("Content-Disposition", "attachment; filename=bag.zip")
     post.addHeader("Content-MD5", md5hex)
     post.addHeader("Packaging", EASY_BAGIT_URI)
@@ -67,13 +86,16 @@ object Main {
       IOUtils.copy(response.getEntity.getContent(), os)
       log.debug("Response entity={}", os.toString("UTF-8"))
     }
+    tempFile.deleteOnExit()
     response.getStatusLine.getStatusCode match {
       case 201 =>
+        val location = response.getFirstHeader("Location").getValue
         log.info("SUCCESS")
-        log.info("Deposit created at: {}", response.getFirstHeader("Location").getValue)
-      case _ => log.error("Deposit failed: {}", response.getStatusLine)
+        log.info(s"Deposit created at: $location")
+        s"${location.split('/').last}/${s.bagDir.getName}"
+      case _ => log.error(s"Deposit failed: ${response.getStatusLine}, ${response.getEntity.toString}")
+        throw new RuntimeException("Deposit failed")
     }
-    tempFile.deleteOnExit()
   }
 
   def compressDirToOutputStream(dir: File, os: OutputStream) {
@@ -89,7 +111,7 @@ object Main {
       case f: File =>
         val relativePath = pathBase.relativize(Paths.get(f.getAbsolutePath))
         val pathString = relativePath + 
-            (if (f.isDirectory()) "/" 
+            (if (f.isDirectory) "/"
              else "")
         zos.putNextEntry(new ZipEntry(pathString))
         if (f.isFile) writeFile(f)
