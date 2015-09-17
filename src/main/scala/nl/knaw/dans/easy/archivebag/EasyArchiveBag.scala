@@ -17,12 +17,11 @@
 package nl.knaw.dans.easy.archivebag
 
 import java.io.{ByteArrayOutputStream, File, FileInputStream, FileOutputStream, OutputStream}
-import java.math.BigInteger
 import java.net.URL
-import java.nio.file.Paths
-import java.security.{DigestOutputStream, MessageDigest}
+import java.nio.file.{Files, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.IOUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.methods.HttpPost
@@ -60,17 +59,13 @@ object EasyArchiveBag {
 
   def run(implicit s: Settings): Try[String] = Try {
     log.debug("Generating unique temporary file name")
-    val tempFile = File.createTempFile("easy-archive-bag", "zip")
+    val tempFile = File.createTempFile("easy-archive-bag-", ".zip")
     tempFile.delete()
-
     log.debug("Zipping bag dir to file at {}", tempFile)
     val fos = new FileOutputStream(tempFile)
-    val md5digest = MessageDigest.getInstance("MD5")
-    compressDirToOutputStream(s.bagDir, new DigestOutputStream(fos, md5digest))
-
-    val md5hex = new BigInteger(1, md5digest.digest).toString(16)
+    compressDirToOutputStream(s.bagDir, fos)
+    val md5hex = computeMd5(tempFile).get
     log.debug("Content-MD5 = {}", md5hex)
-
     log.info("Sending bag to {}, with user = {}, password = {}", s.storageDepositService, s.username, "*****")
     val credsProv = new BasicCredentialsProvider
     credsProv.setCredentials(new AuthScope(s.storageDepositService.getHost, s.storageDepositService.getPort), new UsernamePasswordCredentials(s.username, s.password))
@@ -83,18 +78,28 @@ object EasyArchiveBag {
     val response = http.execute(post)
     if (log.isDebugEnabled) {
       val os = new ByteArrayOutputStream()
-      IOUtils.copy(response.getEntity.getContent(), os)
+      IOUtils.copy(response.getEntity.getContent, os)
       log.debug("Response entity={}", os.toString("UTF-8"))
     }
-    tempFile.deleteOnExit()
+    val deleted = tempFile.delete()
+    if(!deleted) log.warn(s"Delete of $tempFile failed")
     response.getStatusLine.getStatusCode match {
       case 201 =>
         val location = response.getFirstHeader("Location").getValue
         log.info("SUCCESS")
         log.info(s"Deposit created at: $location")
         s"${location.split('/').last}/${s.bagDir.getName}"
-      case _ => log.error(s"Deposit failed: ${response.getStatusLine}, ${response.getEntity.toString}")
+      case _ => log.error(s"Deposit failed: ${response.getStatusLine}, ${response.getEntity.getContent}")
         throw new RuntimeException("Deposit failed")
+    }
+  }
+
+  def computeMd5(zipFile: File): Try[String] = Try {
+    val is = Files.newInputStream(Paths.get(zipFile.getPath))
+    try {
+      DigestUtils.md5Hex(is)
+    } finally {
+      is.close()
     }
   }
 
@@ -107,8 +112,7 @@ object EasyArchiveBag {
       fis.close()
     }
     zos.putNextEntry(new ZipEntry(dir.getName + "/"))
-    recursiveListFiles(dir).map {
-      case f: File =>
+    recursiveListFiles(dir).foreach(f => {
         val relativePath = pathBase.relativize(Paths.get(f.getAbsolutePath))
         val pathString = relativePath + 
             (if (f.isDirectory) "/"
@@ -116,7 +120,8 @@ object EasyArchiveBag {
         zos.putNextEntry(new ZipEntry(pathString))
         if (f.isFile) writeFile(f)
         zos.closeEntry()
-    }
+      }
+    )
     zos.close()
   }
 
