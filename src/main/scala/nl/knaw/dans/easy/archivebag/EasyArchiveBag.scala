@@ -92,6 +92,9 @@ object EasyArchiveBag {
       case _ => log.error(s"Deposit failed: ${response.getStatusLine}, ${response.getEntity.getContent}")
         throw new RuntimeException("Deposit failed")
     }
+
+
+    // TODO: Wait for confirmation that deposit is valid (SUBMITTED)
   }
 
   def computeMd5(zipFile: File): Try[String] = Try {
