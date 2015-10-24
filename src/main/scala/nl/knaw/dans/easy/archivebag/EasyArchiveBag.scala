@@ -16,12 +16,13 @@
 
 package nl.knaw.dans.easy.archivebag
 
-import java.io.{ByteArrayOutputStream, File, FileInputStream, FileOutputStream, OutputStream}
+import java.io._
 import java.net.URL
 import java.nio.file.{Files, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.IOUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.methods.HttpPost
@@ -47,12 +48,13 @@ case class Settings(
        storageDepositService: URL)
 
 object EasyArchiveBag {
+  val props = new PropertiesConfiguration(new File(System.getProperty("app.home"), "cfg/application.properties"))
   val log = LoggerFactory.getLogger(getClass)
-  val EASY_BAGIT_URI = "http://easy.dans.knaw.nl/schemas/EASY-BagIt/2015-07-17"
+  val BAGIT_URI = "http://purl.org/net/sword/package/BagIt"
 
   def main(args: Array[String]) {
     log.debug("Parsing command line arguments")
-    val conf = new Conf(args)
+    val conf = new Conf(args, props)
     implicit val s = Settings(conf)
     run.get
   }
@@ -73,7 +75,7 @@ object EasyArchiveBag {
     val post = new HttpPost(s.storageDepositService.toURI)
     post.addHeader("Content-Disposition", "attachment; filename=bag.zip")
     post.addHeader("Content-MD5", md5hex)
-    post.addHeader("Packaging", EASY_BAGIT_URI)
+    post.addHeader("Packaging", BAGIT_URI)
     post.setEntity(new FileEntity(tempFile, ContentType.create("application/zip")))
     val response = http.execute(post)
     if (log.isDebugEnabled) {
@@ -89,7 +91,10 @@ object EasyArchiveBag {
         log.info("SUCCESS")
         log.info(s"Deposit created at: $location")
         s"${location.split('/').last}/${s.bagDir.getName}"
-      case _ => log.error(s"Deposit failed: ${response.getStatusLine}, ${response.getEntity.getContent}")
+      case _ =>
+        val writer = new StringWriter()
+        IOUtils.copy(response.getEntity.getContent, writer, "UTF-8")
+        log.error(s"Deposit failed: ${response.getStatusLine}, ${writer.toString}")
         throw new RuntimeException("Deposit failed")
     }
 
