@@ -16,11 +16,12 @@
 
 package nl.knaw.dans.easy.archivebag
 
+import org.apache.commons.configuration.PropertiesConfiguration
 import org.rogach.scallop.ScallopConf
 import java.io.File
 import java.net.URL
 
-class Conf(args: Seq[String]) extends ScallopConf(args) {
+class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopConf(args) {
   printedName = "easy-archive-bag"
   version(s"$printedName ${Version()}")
   banner("""
@@ -31,13 +32,13 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
                 |""".stripMargin)
   val username = opt[String]("username",
     descr = "Username to use for authentication/authorisation to the storage service",
-    default = Properties("default.storage-service-username") match {
+    default = props.getString("default.storage-service-username") match {
       case s: String => Some(s)
       case _ => throw new RuntimeException("No username provided")
     })
   val password = opt[String]("password",
     descr = "Password to use for authentication/authorisation to the storage service",
-    default = Properties("default.storage-service-password") match {
+    default = props.getString("default.storage-service-password") match {
       case s: String => Some(s)
       case _ => throw new RuntimeException("No password provided")
     })
@@ -52,7 +53,7 @@ class Conf(args: Seq[String]) extends ScallopConf(args) {
   val storageServiceUrl = trailArg[URL](
     name = "storage-service-url",
     required = false,
-    default = Properties("default.storage-service-url") match {
+    default = props.getString("default.storage-service-url") match {
       case s: String => Some(new URL(s))
       case _ => throw new RuntimeException("No storage service URL provided")
     })

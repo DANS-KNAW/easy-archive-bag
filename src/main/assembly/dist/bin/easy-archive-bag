@@ -1,5 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-java -Dlogback.configurationFile=$EASY_ARCHIVE_BAG_HOME/cfg/logback.xml \
-     -Dconfig.file=$EASY_ARCHIVE_BAG_HOME/cfg/application.conf \
-     -jar $EASY_ARCHIVE_BAG_HOME/bin/easy-archive-bag.jar $@
+BINPATH=`readlink -f $0`
+APPHOME=`dirname \`dirname $BINPATH \``
+
+java -Dlogback.configurationFile=$APPHOME/cfg/logback.xml \
+     -Dapp.home=$APPHOME \
+     -jar $APPHOME/bin/easy-archive-bag.jar $@
