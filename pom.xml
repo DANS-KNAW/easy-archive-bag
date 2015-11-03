@@ -49,6 +49,15 @@
             <version>4.5</version>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <id>DANS</id>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <url>https://easy.dans.knaw.nl/maven/</url>
+        </repository>
+    </repositories>
     <build>
         <finalName>easy-archive-bag</finalName>
         <sourceDirectory>src/main/scala</sourceDirectory>
