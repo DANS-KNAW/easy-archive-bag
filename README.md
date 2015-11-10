@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-Takes a directory in [EASY-BagIt] format, zips it and sends it to the provided storage service URL. The storage service 
+Takes a directory in BagIt format, zips it and sends it to the provided storage service URL. The storage service 
 must support the [SWORD v2] protocol.
 
 
@@ -50,22 +50,14 @@ BUILDING FROM SOURCE
 
 Prerequisites:
 
-* Java 7 or higher
+* Java 8 or higher
 * Maven 3.3.3 or higher
  
 Steps:
-
-1. Clone and build the [dans-parent] project (*can be skipped if you have access to the DANS maven repository*)
-      
-        git clone https://github.com/DANS-KNAW/dans-parent.git
-        cd dans-parent
-        mvn install
-2. Clone and build this project
 
         git clone https://github.com/DANS-KNAW/easy-archive-bag.git
         cd easy-archive-bag
         mvn install
 
-[EASY-BagIt]: http://easy.dans.knaw.nl/schemas/EASY-BagIt.html
 [SWORD v2]: http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html
 
