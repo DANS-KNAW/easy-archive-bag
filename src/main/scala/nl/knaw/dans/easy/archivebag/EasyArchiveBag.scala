@@ -25,18 +25,21 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.IOUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.{HttpGet, HttpPost}
 import org.apache.http.entity.{ContentType, FileEntity}
-import org.apache.http.impl.client.{BasicCredentialsProvider, HttpClients}
+import org.apache.http.impl.client.{CloseableHttpClient, BasicCredentialsProvider, HttpClients}
 import org.slf4j.LoggerFactory
 
 import scala.util.Try
+import scala.xml._
+
 
 object Settings {
   def apply(conf: Conf): Settings =
     new Settings(
       username = conf.username(),
       password = conf.password(),
+      checkInterval = conf.checkInterval(),
       bagDir = conf.bagDirectory(),
       storageDepositService =  conf.storageServiceUrl())
 }
@@ -44,6 +47,7 @@ object Settings {
 case class Settings(
        username: String,
        password: String,
+       checkInterval: Int,
        bagDir: File,
        storageDepositService: URL)
 
@@ -51,6 +55,7 @@ object EasyArchiveBag {
   val props = new PropertiesConfiguration(new File(System.getProperty("app.home"), "cfg/application.properties"))
   val log = LoggerFactory.getLogger(getClass)
   val BAGIT_URI = "http://purl.org/net/sword/package/BagIt"
+  val STATE_FINALIZING = "FINALIZING"
 
   def main(args: Array[String]) {
     log.debug("Parsing command line arguments")
@@ -59,7 +64,7 @@ object EasyArchiveBag {
     run.get
   }
 
-  def run(implicit s: Settings): Try[String] = Try {
+  def run(implicit s: Settings): Try[(String, String)] = Try {
     log.debug("Generating unique temporary file name")
     val tempFile = File.createTempFile("easy-archive-bag-", ".zip")
     tempFile.delete()
@@ -85,21 +90,64 @@ object EasyArchiveBag {
     }
     val deleted = tempFile.delete()
     if(!deleted) log.warn(s"Delete of $tempFile failed")
-    response.getStatusLine.getStatusCode match {
+    val seIri = response.getStatusLine.getStatusCode match {
       case 201 =>
         val location = response.getFirstHeader("Location").getValue
         log.info("SUCCESS")
         log.info(s"Deposit created at: $location")
         s"${location.split('/').last}/${s.bagDir.getName}"
+
       case _ =>
         val writer = new StringWriter()
         IOUtils.copy(response.getEntity.getContent, writer, "UTF-8")
         log.error(s"Deposit failed: ${response.getStatusLine}, ${writer.toString}")
         throw new RuntimeException("Deposit failed")
     }
+    log.info(seIri)
+    (seIri, getConfirmationState(seIri, http))
+  }
 
+  def getConfirmationState(locationBagDir : String, http : CloseableHttpClient)(implicit s: Settings) : String = {
+    var state = STATE_FINALIZING
+    val protocol = s.storageDepositService.getProtocol
+    val host = s.storageDepositService.getHost
+    val context = s.storageDepositService.getPath.split('/')(1)
+    val location = locationBagDir.split('/')(0)
+    val url = s"${protocol}://${host}/${context}/statement/${location}"
 
-    // TODO: Wait for confirmation that deposit is valid (SUBMITTED)
+    //Wait for confirmation that deposit is valid (SUBMITTED or REJECTED)
+    while (state == STATE_FINALIZING) {
+      val content = getResponseContent(url, http)
+      val resp = XML.loadString(content)
+      state = (resp \ "category" \\ "@term").text
+      log.info(s"state: ${state}")
+      if (state == STATE_FINALIZING) {
+        log.info(s"Wait ${s.checkInterval} for the next check.")
+        Thread.sleep(s.checkInterval);
+      }
+    }
+    state
+  }
+
+  def getResponseContent(url: String, httpClients: CloseableHttpClient): String = {
+    val httpResponse = httpClients.execute(new HttpGet(url))
+    httpResponse.getStatusLine.getStatusCode match {
+      case 200 =>
+        val entity = httpResponse.getEntity
+        var content = ""
+        if (entity != null) {
+          val inputStream = entity.getContent
+          content = io.Source.fromInputStream(inputStream).getLines.mkString
+          inputStream.close
+        }
+        content
+      case _ =>
+        val writer = new StringWriter()
+        IOUtils.copy(httpResponse.getEntity.getContent, writer, "UTF-8")
+        log.error(s"Check state failed: ${httpResponse.getStatusLine}, ${writer.toString}")
+        throw new RuntimeException("Check state failed")
+    }
+
   }
 
   def computeMd5(zipFile: File): Try[String] = Try {
