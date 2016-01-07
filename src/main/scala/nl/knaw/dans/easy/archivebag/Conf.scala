@@ -42,6 +42,16 @@ class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopCon
       case s: String => Some(s)
       case _ => throw new RuntimeException("No password provided")
     })
+  val checkInterval = opt[Int]("check-interval",
+    descr = "Interval (in milliseconds) that the service must check the storage service (the store service is checked until the given state is other than FINALIZING)",
+    default = Option(1000)
+  )
+
+  val maxCheckCount = opt[Int]("max-check-count",
+    descr = "The maximum number that the service must check the storage service.",
+    default = Option(10)
+  )
+
   val bagDirectory = trailArg[File](name = "bag-directory", required = true,
     descr = "Directory in BagIt format that will be sent to archival storage")
   validateOpt(bagDirectory) {
@@ -57,4 +67,4 @@ class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopCon
       case s: String => Some(new URL(s))
       case _ => throw new RuntimeException("No storage service URL provided")
     })
-} 
+}
