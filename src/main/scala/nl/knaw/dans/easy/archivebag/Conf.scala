@@ -50,12 +50,13 @@ class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopCon
     descr = "The maximum number that the service must check the storage service.",
     default = Option(10)
   )
-
+  val slug = opt[String]("slug",
+    descr = "The value to send in the Slug-header",
+    default = None)
   val bagDirectory = trailArg[File](name = "bag-directory", required = true,
     descr = "Directory in BagIt format that will be sent to archival storage")
   validateOpt(bagDirectory) {
     case Some(dir) =>
-      // TODO: check that it is a valid bag
       Right(Unit)
     case _ => Left("Could not parse parameter <bag-directory>")
   }
