@@ -1,7 +1,6 @@
-*Note: this project is in pre-alpha state, so below instructions may not work completely yet*
-
 easy-archive-bag
 ================
+[![Build Status](https://travis-ci.org/DANS-KNAW/easy-archive-bag.svg?branch=master)](https://travis-ci.org/DANS-KNAW/easy-archive-bag)
 
 Send a bag to archival storage.
 
