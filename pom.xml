@@ -21,7 +21,7 @@
     <parent>
        <groupId>nl.knaw.dans.shared</groupId>
        <artifactId>dans-scala-prototype</artifactId>
-       <version>1.24</version>
+       <version>1.26</version>
     </parent>
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-archive-bag</artifactId>
@@ -79,6 +79,15 @@
             <url>https://easy.dans.knaw.nl/maven/</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>DANS</id>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <url>https://easy.dans.knaw.nl/maven/</url>
+        </pluginRepository>
+    </pluginRepositories>
     <build>
         <plugins>
             <plugin>
