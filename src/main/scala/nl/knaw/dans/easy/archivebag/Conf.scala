@@ -21,6 +21,10 @@ import java.io.File
 import java.net.URL
 
 class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopConf(args) {
+
+  appendDefaultToDescription = true
+  editBuilder(_.setHelpWidth(110))
+
   printedName = "easy-archive-bag"
   version(s"$printedName ${Version()}")
   banner("""
@@ -67,4 +71,6 @@ class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopCon
       case s: String => Some(new URL(s))
       case _ => throw new RuntimeException("No storage service URL provided")
     })
+
+  verify()
 }
