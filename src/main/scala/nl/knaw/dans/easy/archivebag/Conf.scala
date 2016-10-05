@@ -59,11 +59,15 @@ class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopCon
     default = None)
   val bagDirectory = trailArg[File](name = "bag-directory", required = true,
     descr = "Directory in BagIt format that will be sent to archival storage")
+
+  validateFileExists(bagDirectory)
+  
   validateOpt(bagDirectory) {
     case Some(dir) =>
       Right(Unit)
     case _ => Left("Could not parse parameter <bag-directory>")
   }
+
   val storageServiceUrl = trailArg[URL](
     name = "storage-service-url",
     required = false,
