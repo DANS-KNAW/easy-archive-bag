@@ -21,6 +21,10 @@ import java.io.File
 import java.net.URL
 
 class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopConf(args) {
+
+  appendDefaultToDescription = true
+  editBuilder(_.setHelpWidth(110))
+
   printedName = "easy-archive-bag"
   version(s"$printedName ${Version()}")
   banner("""
@@ -55,11 +59,15 @@ class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopCon
     default = None)
   val bagDirectory = trailArg[File](name = "bag-directory", required = true,
     descr = "Directory in BagIt format that will be sent to archival storage")
+
+  validateFileExists(bagDirectory)
+  
   validateOpt(bagDirectory) {
     case Some(dir) =>
       Right(Unit)
     case _ => Left("Could not parse parameter <bag-directory>")
   }
+
   val storageServiceUrl = trailArg[URL](
     name = "storage-service-url",
     required = false,
@@ -67,4 +75,6 @@ class Conf(args: Seq[String], props: PropertiesConfiguration) extends ScallopCon
       case s: String => Some(new URL(s))
       case _ => throw new RuntimeException("No storage service URL provided")
     })
+
+  verify()
 }
