@@ -43,7 +43,7 @@ object Settings {
       checkInterval = conf.checkInterval(),
       maxCheckCount = conf.maxCheckCount(),
       bagDir = conf.bagDirectory(),
-      slug = conf.slug.get,
+      slug = conf.slug.toOption,
       storageDepositService =  conf.storageServiceUrl())
 }
 
