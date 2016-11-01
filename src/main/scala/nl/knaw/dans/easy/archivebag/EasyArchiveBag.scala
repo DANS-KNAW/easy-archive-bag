@@ -26,7 +26,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost}
 import org.apache.http.entity.{ContentType, FileEntity}
-import org.apache.http.impl.client.{CloseableHttpClient, BasicCredentialsProvider, HttpClients}
+import org.apache.http.impl.client.{BasicCredentialsProvider, CloseableHttpClient, HttpClients}
 import org.slf4j.LoggerFactory
 
 import scala.util.{Failure, Try}
