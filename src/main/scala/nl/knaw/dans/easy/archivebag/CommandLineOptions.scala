@@ -64,7 +64,7 @@ class ScallopCommandLine(props: PropertiesConfiguration, args: Array[String]) ex
   banner(s"""
                 |Send a bag to archival storage.
                 |
-                |Usage: $printedName [--username] [--password] [--checkInterval <int>] [--max-check-count <int>] [--slug] <bag-directory> [<storage-service-url>]
+                |Usage: $printedName <bag-directory> [<storage-service-url>]
                 |Options:
                 |""".stripMargin)
 
