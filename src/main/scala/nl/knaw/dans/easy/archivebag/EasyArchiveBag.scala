@@ -22,50 +22,23 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.codec.net.URLCodec
-import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.io.IOUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost}
 import org.apache.http.entity.{ContentType, FileEntity}
-import org.apache.http.impl.client.{CloseableHttpClient, BasicCredentialsProvider, HttpClients}
+import org.apache.http.impl.client.{BasicCredentialsProvider, CloseableHttpClient, HttpClients}
 import org.slf4j.LoggerFactory
 
 import scala.util.{Failure, Try}
 import scala.xml._
-import scala.util.control._
-
-
-object Settings {
-  def apply(conf: Conf): Settings =
-    new Settings(
-      username = conf.username(),
-      password = conf.password(),
-      checkInterval = conf.checkInterval(),
-      maxCheckCount = conf.maxCheckCount(),
-      bagDir = conf.bagDirectory(),
-      slug = conf.slug.toOption,
-      storageDepositService =  conf.storageServiceUrl())
-}
-
-case class Settings(
-       username: String,
-       password: String,
-       checkInterval: Int,
-       maxCheckCount: Int,
-       bagDir: File,
-       slug: Option[String],
-       storageDepositService: URL)
 
 object EasyArchiveBag {
-  val props = new PropertiesConfiguration(new File(System.getProperty("app.home"), "cfg/application.properties"))
   val log = LoggerFactory.getLogger(getClass)
   val BAGIT_URI = "http://purl.org/net/sword/package/BagIt"
   val STATE_FINALIZING = "FINALIZING"
 
   def main(args: Array[String]) {
-    log.debug("Parsing command line arguments")
-    val conf = new Conf(args, props)
-    implicit val s = Settings(conf)
+    implicit val settings = CommandLineOptions.parse(args)
     run.get
   }
 

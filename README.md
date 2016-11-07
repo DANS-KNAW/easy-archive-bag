@@ -21,9 +21,22 @@ must support the [SWORD v2] protocol.
 ARGUMENTS
 ---------
 
-* ``<bag directory>`` -- the directory on the local file system containing the bag
-* ``<storage-service-url>`` -- URL of a SWORD v2 service that stores the bag in archival storage. By default the 
-   URL configured in ``$EASY_ARCHIVE_BAG_HOME/cfg/application.properties`` will be used.
+     -c, --check-interval  <arg>    Interval (in milliseconds) that the service must check the storage service
+                                    (the store service is checked until the given state is other than FINALIZING)
+                                    (default = 1000)
+     -m, --max-check-count  <arg>   The maximum number that the service must check the storage service.
+                                    (default = 10)
+     -p, --password  <arg>          Password to use for authentication/authorisation to the storage service
+                                    (default = PASSWORD)
+     -s, --slug  <arg>              The value to send in the Slug-header
+     -u, --username  <arg>          Username to use for authentication/authorisation to the storage service
+                                    (default = USERNAME)
+         --help                     Show help message
+         --version                  Show version of this program
+    
+    trailing arguments:
+     bag-directory (required)             Directory in BagIt format that will be sent to archival storage
+     storage-service-url (not required)    (default = http://localhost:8080/easy-darkarchive/collection/1)
 
 
 INSTALLATION AND CONFIGURATION

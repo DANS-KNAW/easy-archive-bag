@@ -13,12 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.easy.archivebag
+package nl.knaw.dans.easy
 
-object Version {
-  def apply(): String = {
-    val props = new java.util.Properties()
-    props.load(Version.getClass.getResourceAsStream("/Version.properties"))
-    props.getProperty("application.version")
+import java.io.File
+import java.net.URL
+
+package object archivebag {
+
+  case class Settings(username: String,
+                      password: String,
+                      checkInterval: Int,
+                      maxCheckCount: Int,
+                      bagDir: File,
+                      slug: Option[String],
+                      storageDepositService: URL)
+
+  object Version {
+    def apply(): String = {
+      val props = new java.util.Properties()
+      props.load(Version.getClass.getResourceAsStream("/Version.properties"))
+      props.getProperty("application.version")
+    }
   }
 }
