@@ -17,16 +17,15 @@ package nl.knaw.dans.easy
 
 import java.io.File
 import java.net.URL
+import java.util.UUID
 
 package object archivebag {
 
-  case class Settings(username: String,
-                      password: String,
-                      checkInterval: Int,
-                      maxCheckCount: Int,
-                      bagDir: File,
-                      slug: Option[String],
-                      storageDepositService: URL)
+  case class Parameters(username: String,
+                        password: String,
+                        bagDir: File,
+                        storageDepositService: URL,
+                        uuid: UUID)
 
   object Version {
     def apply(): String = {

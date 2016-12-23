@@ -16,9 +16,10 @@
 package nl.knaw.dans.easy.archivebag
 
 import org.apache.commons.configuration.PropertiesConfiguration
-import org.rogach.scallop.ScallopConf
+import org.rogach.scallop.{ScallopConf, ScallopOption}
 import java.io.File
 import java.net.URL
+import java.util.UUID
 
 import org.slf4j.LoggerFactory
 
@@ -26,7 +27,7 @@ object CommandLineOptions {
 
   val log = LoggerFactory.getLogger(getClass)
 
-  def parse(args: Array[String]): Settings = {
+  def parse(args: Array[String]): Parameters = {
     log.debug("Loading application.properties ...")
 
     val homeDir = new File(System.getProperty("app.home"))
@@ -38,15 +39,14 @@ object CommandLineOptions {
     }
     log.debug("Parsing command line ...")
     val conf = new ScallopCommandLine(props, args)
+    conf.verify()
 
-    val settings = Settings(
+    val settings = Parameters(
       username = conf.username(),
       password = conf.password(),
-      checkInterval = conf.checkInterval(),
-      maxCheckCount = conf.maxCheckCount(),
       bagDir = conf.bagDirectory(),
-      slug = conf.slug.toOption,
-      storageDepositService = conf.storageServiceUrl())
+      storageDepositService = conf.storageServiceUrl(),
+      uuid = UUID.fromString(conf.uuid()))
 
     log.debug(s"Using the following settings: $settings")
 
@@ -68,44 +68,29 @@ class ScallopCommandLine(props: PropertiesConfiguration, args: Array[String]) ex
                 |Options:
                 |""".stripMargin)
 
-  val username = opt[String]("username",
+  val username: ScallopOption[String] = opt[String]("username",
     descr = "Username to use for authentication/authorisation to the storage service",
     default = props.getString("default.storage-service-username") match {
       case s: String => Some(s)
       case _ => throw new RuntimeException("No username provided")
     })
 
-  val password = opt[String]("password",
+  val password: ScallopOption[String] = opt[String]("password",
     descr = "Password to use for authentication/authorisation to the storage service",
     default = props.getString("default.storage-service-password") match {
       case s: String => Some(s)
       case _ => throw new RuntimeException("No password provided")
     })
 
-  val checkInterval = opt[Int]("check-interval",
-    descr = "Interval (in milliseconds) that the service must check the storage service (the store service is checked until the given state is other than FINALIZING)",
-    default = Option(1000))
-
-  val maxCheckCount = opt[Int]("max-check-count",
-    descr = "The maximum number that the service must check the storage service.",
-    default = Option(10))
-
-  val slug = opt[String]("slug",
-    descr = "The value to send in the Slug-header",
-    default = None)
-
-  val bagDirectory = trailArg[File](name = "bag-directory", required = true,
+  val bagDirectory: ScallopOption[File] = trailArg[File](name = "bag-directory", required = true,
     descr = "Directory in BagIt format that will be sent to archival storage")
 
-  validateFileExists(bagDirectory)
+  val uuid: ScallopOption[String] = trailArg[String](
+    name= "uuid",
+    descr = "Identifier for the bag in archival storage",
+    required = true)
 
-  validateOpt(bagDirectory) {
-    case Some(dir) =>
-      Right(Unit)
-    case _ => Left("Could not parse parameter <bag-directory>")
-  }
-
-  val storageServiceUrl = trailArg[URL](
+  val storageServiceUrl: ScallopOption[URL] = trailArg[URL](
     name = "storage-service-url",
     required = false,
     default = props.getString("default.storage-service-url") match {
@@ -113,5 +98,11 @@ class ScallopCommandLine(props: PropertiesConfiguration, args: Array[String]) ex
       case _ => throw new RuntimeException("No storage service URL provided")
     })
 
-  verify()
+
+  validateFileExists(bagDirectory)
+  validateOpt(bagDirectory) {
+    case Some(dir) =>
+      Right(Unit)
+    case _ => Left("Could not parse parameter <bag-directory>")
+  }
 }
