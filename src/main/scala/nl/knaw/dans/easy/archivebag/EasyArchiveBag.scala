@@ -34,8 +34,6 @@ import scala.xml._
 
 object EasyArchiveBag {
   val log = LoggerFactory.getLogger(getClass)
-  val BAGIT_URI = "http://purl.org/net/sword/package/BagIt"
-  val STATE_FINALIZING = "FINALIZING"
 
   def main(args: Array[String]) {
     implicit val settings = CommandLineOptions.parse(args)
