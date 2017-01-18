@@ -69,8 +69,8 @@ object EasyArchiveBag {
 
   private def putFile(file: File)(implicit s: Parameters): CloseableHttpResponse = {
     val md5hex = computeMd5(file).get
-    log.debug("Content-MD5 = {}", md5hex)
-    log.info("Sending bag to {}, id = {}, with user = {}, password = {}", s.uuid, s.storageDepositService, s.username, "*****")
+    log.debug(s"Content-MD5 = $md5hex")
+    log.info(s"Sending bag to ${s.storageDepositService}, id = ${s.uuid}, with user = ${s.username}, password = ******")
     val credsProv = new BasicCredentialsProvider
     credsProv.setCredentials(new AuthScope(s.storageDepositService.getHost, s.storageDepositService.getPort), new UsernamePasswordCredentials(s.username, s.password))
     val http = HttpClients.custom.setDefaultCredentialsProvider(credsProv).build()
