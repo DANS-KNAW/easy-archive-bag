@@ -17,7 +17,7 @@ package nl.knaw.dans.easy.archivebag
 
 import java.io._
 import java.net.{URI, URL}
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import org.apache.commons.codec.digest.DigestUtils
@@ -29,11 +29,12 @@ import org.apache.http.entity.{ContentType, FileEntity}
 import org.apache.http.impl.client.{BasicCredentialsProvider, CloseableHttpClient, HttpClients}
 import org.slf4j.LoggerFactory
 
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 import scala.xml._
 
 object EasyArchiveBag {
   val log = LoggerFactory.getLogger(getClass)
+  type BagId = String
 
   def main(args: Array[String]) {
     implicit val settings = CommandLineOptions.parse(args)
@@ -41,6 +42,12 @@ object EasyArchiveBag {
   }
 
   def run(implicit ps: Parameters): Try[URI] = Try {
+    for {
+      optVersionOfId <- getIsVersionOf(ps.bagDir.toPath)
+      optRefBagsTxt <- optVersionOfId.map(getBagSequence).getOrElse(Success(None))
+      _ <- optRefBagsTxt.map(writeRefBagsTxt(ps.bagDir.toPath))
+    } yield ()
+
     val zippedBag = generateUncreatedTempFile()
     zipDir(ps.bagDir, zippedBag)
     val response = putFile(zippedBag)
@@ -48,11 +55,34 @@ object EasyArchiveBag {
       case 201 =>
         val location = new URI(response.getFirstHeader("Location").getValue)
         log.info(s"Bag archival location created at: $location")
+
+        // TODO: add bag to index
+
         location
       case _ =>
         throw new RuntimeException(s"Bag archiving failed: ${response.getStatusLine}")
     }
   }
+
+  private def getIsVersionOf(bagDir: Path): Try[Option[BagId]] = {
+
+
+    ???
+  }
+
+
+  private def getBagSequence(bagId: BagId)(implicit ps: Parameters): Try[Option[String]] = {
+
+
+    ???
+  }
+
+  private def writeRefBagsTxt(bagDir: Path)(refBagsTxt: String): Try[Unit] = {
+
+
+    ???
+  }
+
 
   private def generateUncreatedTempFile(): File =  {
     val tempFile = File.createTempFile("easy-archive-bag-", ".zip")
