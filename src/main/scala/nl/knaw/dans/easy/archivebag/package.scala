@@ -16,15 +16,20 @@
 package nl.knaw.dans.easy
 
 import java.io.File
-import java.net.URL
+import java.net.{URI, URL}
+import java.nio.file.Path
 import java.util.UUID
 
 package object archivebag {
+  case class BagNotFoundException(bagDir: Path, cause: Throwable) extends Exception(s"A bag could not be loaded at $bagDir", cause)
+
+  val IS_VERSION_OF_KEY = "Is-Version-Of"
 
   case class Parameters(username: String,
                         password: String,
                         bagDir: File,
                         storageDepositService: URL,
+                        bagIndexService: URI,
                         uuid: UUID)
 
   object Version {

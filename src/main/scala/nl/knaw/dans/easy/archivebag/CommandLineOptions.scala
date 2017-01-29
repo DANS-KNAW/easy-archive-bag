@@ -15,12 +15,12 @@
  */
 package nl.knaw.dans.easy.archivebag
 
-import org.apache.commons.configuration.PropertiesConfiguration
-import org.rogach.scallop.{ScallopConf, ScallopOption}
 import java.io.File
-import java.net.URL
+import java.net.{URI, URL}
 import java.util.UUID
 
+import org.apache.commons.configuration.PropertiesConfiguration
+import org.rogach.scallop.{ScallopConf, ScallopOption}
 import org.slf4j.LoggerFactory
 
 object CommandLineOptions {
@@ -46,6 +46,7 @@ object CommandLineOptions {
       password = conf.password(),
       bagDir = conf.bagDirectory(),
       storageDepositService = conf.storageServiceUrl(),
+      bagIndexService = new URI(props.getString("bag-index.uri")),
       uuid = UUID.fromString(conf.uuid()))
 
     log.debug(s"Using the following settings: $settings")
