@@ -45,6 +45,7 @@ object CommandLineOptions {
       username = conf.username(),
       password = conf.password(),
       bagDir = conf.bagDirectory(),
+      tempDir = new File(props.getString("tempdir")),
       storageDepositService = conf.storageServiceUrl(),
       bagIndexService = new URI(props.getString("bag-index.uri")),
       uuid = UUID.fromString(conf.uuid()))

@@ -29,6 +29,7 @@ package object archivebag {
   case class Parameters(username: String,
                         password: String,
                         bagDir: File,
+                        tempDir: File,
                         storageDepositService: URL,
                         bagIndexService: URI,
                         uuid: UUID)
