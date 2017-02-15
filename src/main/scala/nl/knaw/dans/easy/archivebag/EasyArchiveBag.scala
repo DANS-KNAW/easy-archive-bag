@@ -59,6 +59,7 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
         addBagToIndex(ps.uuid).recover {
           case t => warn(s"BAG ${ps.uuid} NOT ADDED TO BAG-INDEX. SUBSEQUENT REVISIONS WILL NOT BE PRUNED", t)
         }
+        zippedBag.delete()
         location
       case _ =>
         throw new RuntimeException(s"Bag archiving failed: ${response.getStatusLine}")
@@ -112,8 +113,8 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
     FileUtils.write(bagDir.resolve("refbags.txt").toFile, refBagsTxt, "UTF-8")
   }
 
-  private def generateUncreatedTempFile(): File =  {
-    val tempFile = File.createTempFile("easy-archive-bag-", ".zip")
+  private def generateUncreatedTempFile()(implicit ps: Parameters): File =  {
+    val tempFile = File.createTempFile("easy-archive-bag-", ".zip", ps.tempDir)
     tempFile.delete()
     debug(s"Generated unique temporary file name: $tempFile")
     tempFile
