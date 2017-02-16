@@ -21,6 +21,8 @@ import java.nio.file.{Files, Path, Paths}
 import java.util.UUID
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
+import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.model.ZipParameters
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.{FileUtils, IOUtils}
@@ -122,8 +124,10 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
 
   private def zipDir(dir: File, zip: File) = {
     debug(s"Zipping directory $dir to file $zip")
-    val fos = new FileOutputStream(zip)
-    compressDirToOutputStream(dir, fos)
+    if (zip.exists) zip.delete
+    val zf = new ZipFile(zip)
+    val parameters = new ZipParameters
+    zf.addFolder(dir, parameters)
   }
 
   private def putFile(file: File)(implicit s: Parameters): CloseableHttpResponse = {
@@ -144,7 +148,6 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
     HttpClients.custom.setDefaultCredentialsProvider(credsProv).build()
   }
 
-
   private def computeMd5(file: File): Try[String] = Try {
     val is = Files.newInputStream(Paths.get(file.getPath))
     try {
@@ -152,32 +155,5 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
     } finally {
       is.close()
     }
-  }
-
-  private def compressDirToOutputStream(dir: File, os: OutputStream) {
-    val pathBase = Paths.get(dir.getParentFile.getAbsolutePath)
-    val zos = new ZipOutputStream(os)
-    def writeFile(f: File) = {
-      val fis = new FileInputStream(f)
-      IOUtils.copy(fis, zos)
-      fis.close()
-    }
-    zos.putNextEntry(new ZipEntry(dir.getName + "/"))
-    recursiveListFiles(dir).foreach(f => {
-        val relativePath = pathBase.relativize(Paths.get(f.getAbsolutePath))
-        val pathString = relativePath + 
-            (if (f.isDirectory) "/"
-             else "")
-        zos.putNextEntry(new ZipEntry(pathString))
-        if (f.isFile) writeFile(f)
-        zos.closeEntry()
-      }
-    )
-    zos.close()
-  }
-
-  private def recursiveListFiles(f: File): Array[File] = {
-    val fs = f.listFiles
-    fs ++ fs.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
 }
