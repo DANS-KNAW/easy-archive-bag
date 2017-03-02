@@ -135,7 +135,7 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
     debug(s"Content-MD5 = $md5hex")
     info(s"Sending bag to ${s.storageDepositService}, id = ${s.uuid}, with user = ${s.username}, password = ****")
     val http = createHttpClient(s.storageDepositService.getHost, s.storageDepositService.getPort, s.username, s.password)
-    val put = new HttpPut(new URI(s.storageDepositService + s.uuid.toString))
+    val put = new HttpPut(s.storageDepositService.toURI.resolve("bags/").resolve(s.uuid.toString))
     put.addHeader("Content-Disposition", "attachment; filename=bag.zip")
     put.addHeader("Content-MD5", md5hex)
     put.setEntity(new FileEntity(file, ContentType.create("application/zip")))
