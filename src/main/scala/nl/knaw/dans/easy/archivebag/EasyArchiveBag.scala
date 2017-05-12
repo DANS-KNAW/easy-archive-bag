@@ -19,7 +19,6 @@ import java.io._
 import java.net.URI
 import java.nio.file.{ Files, Path, Paths }
 import java.util.UUID
-import java.util.zip.{ ZipEntry, ZipOutputStream }
 
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
@@ -116,13 +115,14 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
     FileUtils.write(bagDir.resolve("refbags.txt").toFile, refBagsTxt, "UTF-8")
   }
 
+  @throws
   private def generateUncreatedTempFile()(implicit ps: Parameters): File =  try {
     val tempFile = File.createTempFile("easy-archive-bag-", ".zip", ps.tempDir)
     tempFile.delete()
     debug(s"Generated unique temporary file name: $tempFile")
     tempFile
   } catch {
-    case e: Exception => throw new IOException(s"Could not create temp file in ${ps.tempDir}: ${e.getMessage}", e)
+    case NonFatal(e) => throw new IOException(s"Could not create temp file in ${ps.tempDir}: ${e.getMessage}", e)
   }
 
   private def zipDir(dir: File, zip: File) = {
