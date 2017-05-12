@@ -115,7 +115,7 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
     FileUtils.write(bagDir.resolve("refbags.txt").toFile, refBagsTxt, "UTF-8")
   }
 
-  @throws
+  @throws[IOException]("when creating the temp file name failed")
   private def generateUncreatedTempFile()(implicit ps: Parameters): File =  try {
     val tempFile = File.createTempFile("easy-archive-bag-", ".zip", ps.tempDir)
     tempFile.delete()
