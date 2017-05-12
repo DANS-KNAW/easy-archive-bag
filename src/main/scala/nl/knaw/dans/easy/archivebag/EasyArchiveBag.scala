@@ -17,21 +17,22 @@ package nl.knaw.dans.easy.archivebag
 
 import java.io._
 import java.net.URI
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{ Files, Path, Paths }
 import java.util.UUID
-import java.util.zip.{ZipEntry, ZipOutputStream}
+import java.util.zip.{ ZipEntry, ZipOutputStream }
 
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.io.{FileUtils, IOUtils}
-import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPut}
-import org.apache.http.entity.{ContentType, FileEntity}
-import org.apache.http.impl.client.{BasicCredentialsProvider, CloseableHttpClient, HttpClients}
+import org.apache.commons.io.{ FileUtils, IOUtils }
+import org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
+import org.apache.http.client.methods.{ CloseableHttpResponse, HttpGet, HttpPut }
+import org.apache.http.entity.{ ContentType, FileEntity }
+import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClient, HttpClients }
 
-import scala.util.{Failure, Success, Try}
+import scala.util.control.NonFatal
+import scala.util.{ Failure, Success, Try }
 
 object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
   import logger._
@@ -115,11 +116,13 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
     FileUtils.write(bagDir.resolve("refbags.txt").toFile, refBagsTxt, "UTF-8")
   }
 
-  private def generateUncreatedTempFile()(implicit ps: Parameters): File =  {
+  private def generateUncreatedTempFile()(implicit ps: Parameters): File =  try {
     val tempFile = File.createTempFile("easy-archive-bag-", ".zip", ps.tempDir)
     tempFile.delete()
     debug(s"Generated unique temporary file name: $tempFile")
     tempFile
+  } catch {
+    case e: Exception => throw new IOException(s"Could not create temp file in ${ps.tempDir}: ${e.getMessage}", e)
   }
 
   private def zipDir(dir: File, zip: File) = {
