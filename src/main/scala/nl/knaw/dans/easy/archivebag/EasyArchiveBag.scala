@@ -17,6 +17,7 @@ package nl.knaw.dans.easy.archivebag
 
 import java.io._
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Path, Paths }
 import java.util.UUID
 
@@ -128,7 +129,9 @@ object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
   private def zipDir(dir: File, zip: File) = {
     debug(s"Zipping directory $dir to file $zip")
     if (zip.exists) zip.delete
-    val zf = new ZipFile(zip)
+    val zf = new ZipFile(zip) {
+      setFileNameCharset(StandardCharsets.UTF_8.name)
+    }
     val parameters = new ZipParameters
     zf.addFolder(dir, parameters)
   }
