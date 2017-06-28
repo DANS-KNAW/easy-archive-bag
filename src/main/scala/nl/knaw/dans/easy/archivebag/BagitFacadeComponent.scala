@@ -38,10 +38,10 @@ trait BagFacadeComponent {
   }
 }
 
-trait Bagit4FacadeComponent extends BagFacadeComponent {
+trait Bagit5FacadeComponent extends BagFacadeComponent {
   this: DebugEnhancedLogging =>
 
-  class Bagit4Facade(bagReader: BagReader = new BagReader) extends BagFacade {
+  class Bagit5Facade(bagReader: BagReader = new BagReader) extends BagFacade {
 
     private def entryToTuple[K, V](entry: Entry[K, V]): (K, V) = entry.getKey -> entry.getValue
 

@@ -34,10 +34,10 @@ import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClie
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
-object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
+object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   import logger._
   type BagId = UUID
-  val bagFacade = new Bagit4Facade()
+  val bagFacade = new Bagit5Facade()
 
   def main(args: Array[String]) {
     implicit val settings = CommandLineOptions.parse(args)
