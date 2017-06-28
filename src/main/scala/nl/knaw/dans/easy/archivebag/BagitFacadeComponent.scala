@@ -15,12 +15,18 @@
  */
 package nl.knaw.dans.easy.archivebag
 
+import java.io.IOException
 import java.nio.file.Path
+import java.util.Map.Entry
 
-import gov.loc.repository.bagit.{Bag, BagFactory}
+import gov.loc.repository.bagit.domain.Bag
+import gov.loc.repository.bagit.exceptions._
+import gov.loc.repository.bagit.reader.BagReader
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
-import scala.collection.JavaConverters.mapAsScalaMapConverter
-import scala.util.{Failure, Try}
+import scala.collection.JavaConverters._
+import scala.util.control.NonFatal
+import scala.util.{ Failure, Try }
 
 // TODO: Code duplication from easy-bag-index. Candidate for new library easy-bagit-lib (a facade over the LOC lib)
 trait BagFacadeComponent {
@@ -33,17 +39,27 @@ trait BagFacadeComponent {
 }
 
 trait Bagit4FacadeComponent extends BagFacadeComponent {
-  class Bagit4Facade(bagFactory: BagFactory = new BagFactory) extends BagFacade {
+  this: DebugEnhancedLogging =>
+
+  class Bagit4Facade(bagReader: BagReader = new BagReader) extends BagFacade {
+
+    private def entryToTuple[K, V](entry: Entry[K, V]): (K, V) = entry.getKey -> entry.getValue
 
     def getBagInfo(bagDir: Path): Try[Map[String, String]] = {
-      for {
-        // TODO: close bag using scala-arm
-        bag <- getBag(bagDir)
-      } yield bag.getBagInfoTxt.asScala.toMap
+      trace(bagDir)
+      getBag(bagDir).map(_.getMetadata.getAll.asScala.map(entryToTuple).toMap)
     }
 
     private def getBag(bagDir: Path): Try[Bag] = Try {
-      bagFactory.createBag(bagDir.toFile, BagFactory.Version.V0_97, BagFactory.LoadOption.BY_MANIFESTS)
-    }.recoverWith { case cause => Failure(BagNotFoundException(bagDir, cause)) }
+      bagReader.read(bagDir)
+    }.recoverWith {
+      case cause: IOException => Failure(NotABagDirException(bagDir, cause))
+      case cause: UnparsableVersionException => Failure(BagReaderException(bagDir, cause))
+      case cause: MaliciousPathException => Failure(BagReaderException(bagDir, cause))
+      case cause: InvalidBagMetadataException => Failure(BagReaderException(bagDir, cause))
+      case cause: UnsupportedAlgorithmException => Failure(BagReaderException(bagDir, cause))
+      case cause: InvalidBagitFileFormatException => Failure(BagReaderException(bagDir, cause))
+      case NonFatal(cause) => Failure(NotABagDirException(bagDir, cause))
+    }
   }
 }
