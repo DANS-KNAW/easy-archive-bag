@@ -35,7 +35,7 @@
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/assembly/dist/bin</directory>
-            <outputDirectory>/bin</outputDirectory>
+            <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
         </fileSet>
         <fileSet>
