@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,10 +34,10 @@ import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClie
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
-object EasyArchiveBag extends Bagit4FacadeComponent with DebugEnhancedLogging {
+object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   import logger._
   type BagId = UUID
-  val bagFacade = new Bagit4Facade()
+  val bagFacade = new Bagit5Facade()
 
   def main(args: Array[String]) {
     implicit val settings = CommandLineOptions.parse(args)
