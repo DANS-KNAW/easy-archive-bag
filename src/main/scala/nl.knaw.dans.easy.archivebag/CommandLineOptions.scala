@@ -60,13 +60,14 @@ class ScallopCommandLine(props: PropertiesConfiguration, args: Array[String]) ex
   editBuilder(_.setHelpWidth(110))
 
   printedName = "easy-archive-bag"
-  version(s"$printedName ${Version()}")
-  banner(s"""
-                |Send a bag to archival storage.
-                |
-                |Usage: $printedName <bag-directory> [<storage-service-url>]
-                |Options:
-                |""".stripMargin)
+  version(s"$printedName ${ Version() }")
+  banner(
+    s"""
+       |Send a bag to archival storage.
+       |
+       |Usage: $printedName <bag-directory> [<storage-service-url>]
+       |Options:
+       |""".stripMargin)
 
   val username: ScallopOption[String] = opt[String]("username",
     descr = "Username to use for authentication/authorisation to the storage service",
@@ -86,7 +87,7 @@ class ScallopCommandLine(props: PropertiesConfiguration, args: Array[String]) ex
     descr = "Directory in BagIt format that will be sent to archival storage")
 
   val uuid: ScallopOption[String] = trailArg[String](
-    name= "uuid",
+    name = "uuid",
     descr = "Identifier for the bag in archival storage",
     required = true)
 
@@ -97,7 +98,6 @@ class ScallopCommandLine(props: PropertiesConfiguration, args: Array[String]) ex
       case s: String => Some(new URL(s))
       case _ => throw new RuntimeException("No storage service URL provided")
     })
-
 
   validateFileExists(bagDirectory)
   validateOpt(bagDirectory) {

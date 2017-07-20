@@ -16,7 +16,7 @@
 package nl.knaw.dans.easy
 
 import java.io.File
-import java.net.{URI, URL}
+import java.net.{ URI, URL }
 import java.nio.file.Path
 import java.util.UUID
 
