@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <!-- encoders are assigned the type
@@ -10,9 +10,9 @@
 
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/easy-archive-bag.log</file>
+        <file>data/easy-archive-bag.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${user.home}/easy-archive-bag.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>data/easy-archive-bag.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -23,5 +23,5 @@
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>
-    <logger name="nl.knaw.dans.easy" level="info"/>
+    <logger name="nl.knaw.dans.easy" level="trace"/>
 </configuration>
