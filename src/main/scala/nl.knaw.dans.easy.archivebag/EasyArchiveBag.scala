@@ -36,9 +36,6 @@ import scala.util.{ Failure, Success, Try }
 
 object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
 
-  import logger._
-
-  type BagId = UUID
   val bagFacade = new Bagit5Facade()
 
   def main(args: Array[String]) {
@@ -49,7 +46,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   def run(implicit ps: Parameters): Try[URI] = Try {
     // TODO: refactor this function not to rely on throwing of exceptions
     (for {
-      optVersionOfId <- getIsVersionOf(ps.bagDir.toPath)
+      optVersionOfId <- bagFacade.getIsVersionOf(ps.bagDir.toPath)
       optRefBagsTxt <- optVersionOfId.map(getBagSequence).getOrElse(Success(None))
       _ <- optRefBagsTxt.map(writeRefBagsTxt(ps.bagDir.toPath)).getOrElse(Success(()))
     } yield ()).get // trigger exception if result is Failure
@@ -60,9 +57,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     response.getStatusLine.getStatusCode match {
       case 201 =>
         val location = new URI(response.getFirstHeader("Location").getValue)
-        info(s"Bag archival location created at: $location")
-        addBagToIndex(ps.uuid).recover {
-          case t => warn(s"BAG ${ ps.uuid } NOT ADDED TO BAG-INDEX. SUBSEQUENT REVISIONS WILL NOT BE PRUNED", t)
+        logger.info(s"Bag archival location created at: $location")
+        addBagToIndex(ps.bagId).recover {
+          case t => logger.warn(s"BAG ${ ps.bagId } NOT ADDED TO BAG-INDEX. SUBSEQUENT REVISIONS WILL NOT BE PRUNED", t)
         }
         zippedBag.delete()
         location
@@ -71,32 +68,10 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     }
   }
 
-  private def getIsVersionOf(bagDir: Path): Try[Option[BagId]] = {
-    for {
-      info <- bagFacade.getBagInfo(bagDir)
-      versionOf <- info.get(IS_VERSION_OF_KEY)
-        .map(s => Try {
-          new URI(s)
-        }.flatMap(getIsVersionOfFromUri).map(Option(_)))
-        .getOrElse(Success(None))
-    } yield versionOf
-  }
-
-  // TODO: canditate for easy-bagit-lib
-  private def getIsVersionOfFromUri(uri: URI): Try[UUID] = {
-    if (uri.getScheme == "urn") {
-      val uuidPart = uri.getSchemeSpecificPart
-      val parts = uuidPart.split(':')
-      if (parts.length != 2) Failure(InvalidIsVersionOfException(uri.toASCIIString))
-      else Try { UUID.fromString(parts(1)) }
-    }
-    else Failure(InvalidIsVersionOfException(uri.toASCIIString))
-  }
-
   private def addBagToIndex(bagId: BagId)(implicit ps: Parameters): Try[Unit] = Try {
     val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
     val put = new HttpPut(ps.bagIndexService.resolve(s"bags/$bagId").toASCIIString)
-    info(s"Adding new bag to bag index with request: ${ put.toString }")
+    logger.info(s"Adding new bag to bag index with request: ${ put.toString }")
     val response = http.execute(put)
     if (response.getStatusLine.getStatusCode != 201) throw new IllegalStateException("Error trying to add bag to index")
   }
@@ -143,9 +118,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   private def putFile(file: File)(implicit s: Parameters): CloseableHttpResponse = {
     val md5hex = computeMd5(file).get
     debug(s"Content-MD5 = $md5hex")
-    info(s"Sending bag to ${ s.storageDepositService }, id = ${ s.uuid }, with user = ${ s.username }, password = ****")
+    logger.info(s"Sending bag to ${ s.storageDepositService }, id = ${ s.bagId }, with user = ${ s.username }, password = ****")
     val http = createHttpClient(s.storageDepositService.getHost, s.storageDepositService.getPort, s.username, s.password)
-    val put = new HttpPut(s.storageDepositService.toURI.resolve("bags/").resolve(s.uuid.toString))
+    val put = new HttpPut(s.storageDepositService.toURI.resolve("bags/").resolve(s.bagId.toString))
     put.addHeader("Content-Disposition", "attachment; filename=bag.zip")
     put.addHeader("Content-MD5", md5hex)
     put.setEntity(new FileEntity(file, ContentType.create("application/zip")))
