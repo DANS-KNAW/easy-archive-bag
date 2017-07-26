@@ -50,4 +50,4 @@
       regexp: '^{{ item.key }}.*$'
       replace: '{{ item.key }}={{ item.value }}'
     with_items:
-      - { key: 'daemon.external-base-uri',          value: 'http://test.dans.knaw.nl/' }
+      - { key: 'tempdir', value: '/data/tmp/easy-archive-bag-staging' }

@@ -15,12 +15,13 @@
 # limitations under the License.
 #
 
+DATADIR=data
 
-ARGS=$@
-APPHOME=home
-. apphome.sh
+echo "Creating staging area in $DATADIR..."
+mkdir -p $DATADIR/easy-archive-bag-staging
 
-mvn exec:java -Dapp.home=$APPHOME \
-              -Dconfig.file=$APPHOME/cfg/application.conf \
-              -Dlogback.configurationFile=$APPHOME/cfg/logback.xml \
-              -Dexec.args="$ARGS"
+echo "Copy bags to $DATADIR..."
+mkdir $DATADIR/bags
+cp -r src/test/resources/bags/basic-sequence-unpruned $DATADIR/bags/basic-sequence-unpruned
+
+echo "OK"

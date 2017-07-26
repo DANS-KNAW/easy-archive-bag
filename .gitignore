@@ -11,6 +11,7 @@
 *~
 *.swp
 /*.iml
+*.sc
 /.idea/
 .DS_Store
 /apphome.sh
