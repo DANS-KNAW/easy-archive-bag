@@ -20,15 +20,44 @@
   - name: Install standard software
     yum: name="{{ item }}"
     with_items:
+      - httpd
       - libselinux-python
       - libsemanage-python
       - tree
       - tmux
 
+  - name: Enable Apache HTTP Server
+    service:
+      name: httpd
+      enabled: yes
+      state: started
+
   - name: Enable SELinux
     selinux:
        policy: targeted
        state: enforcing
+
+  - name: Allow Apache HTTP Server to call back-end service
+    seboolean:
+      name: httpd_can_network_connect
+      state: yes
+      persistent: yes
+
+  - name: Configure server name
+    lineinfile:
+      dest: "/etc/httpd/conf/httpd.conf"
+      line: 'ServerName test'
+      insertafter: '^#\s?ServerName.*80$'
+
+  - name: Add configuration for site
+    copy:
+      src: "test.conf"
+      dest: "/etc/httpd/conf.d/"
+
+  - name: Reload Apache HTTP Server
+    service:
+      name: httpd
+      state: reloaded
 
   - name: Add /opt/bin to PATH
     copy:
@@ -39,15 +68,43 @@
   - include_role:
       name: yum-repo
 
-  - name: Installing package
+  - name: Installing packages
     yum:
-      name: dans.knaw.nl-easy-archive-bag
+      name: "{{ item }}"
       state: latest
+    with_items:
+      - dans.knaw.nl-easy-archive-bag
+      - dans.knaw.nl-easy-bag-store
+      - dans.knaw.nl-easy-bag-index
 
-  - name: Configure application (application.properties)
+  - name: Configure application (archive-bag application.properties)
     replace:
       dest: '/etc/opt/dans.knaw.nl/easy-archive-bag/application.properties'
       regexp: '^{{ item.key }}.*$'
       replace: '{{ item.key }}={{ item.value }}'
     with_items:
-      - { key: 'tempdir', value: '/data/tmp/easy-archive-bag-staging' }
+      - { key: 'tempdir', value: '/home/vagrant/easy-archive-bag-staging' }
+
+  - name: Configure application (bag-store application.properties)
+    replace:
+      dest: '/etc/opt/dans.knaw.nl/easy-bag-store/application.properties'
+      regexp: '^{{ item.key }}.*$'
+      replace: '{{ item.key }}={{ item.value }}'
+    with_items:
+      - { key: 'daemon.external-base-uri', value: 'http://test.dans.knaw.nl/' }
+
+  - name: Configure application (bag-index application.properties)
+    replace:
+      dest: '/etc/opt/dans.knaw.nl/easy-bag-index/application.properties'
+      regexp: '^{{ item.key }}.*$'
+      replace: '{{ item.key }}={{ item.value }}'
+    with_items:
+      - { key: 'bag-index.bag-store.base-dirs', value: '/srv/dans.knaw.nl/bag-store' }
+
+  - service:
+      name: "{{ item }}"
+      state: restarted
+      enabled: yes
+    with_items:
+      - easy-bag-store
+      - easy-bag-index
