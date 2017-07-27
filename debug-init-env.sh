@@ -17,6 +17,8 @@
 
 DATADIR=data
 
+touch $DATADIR/easy-archive-bag.log
+
 echo "Creating staging area in $DATADIR..."
 mkdir -p $DATADIR/easy-archive-bag-staging
 
