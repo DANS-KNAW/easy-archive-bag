@@ -17,13 +17,13 @@
 
 DATADIR=data
 
-touch $DATADIR/easy-archive-bag.log
+touch ${DATADIR}/easy-archive-bag.log
 
 echo "Creating staging area in $DATADIR..."
-mkdir -p $DATADIR/easy-archive-bag-staging
+mkdir -p ${DATADIR}/easy-archive-bag-staging
 
 echo "Copy bags to $DATADIR..."
-mkdir $DATADIR/bags
-cp -r src/test/resources/bags/basic-sequence-unpruned $DATADIR/bags/basic-sequence-unpruned
+mkdir ${DATADIR}/bags
+cp -r src/test/resources/bags/basic-sequence-unpruned ${DATADIR}/bags/basic-sequence-unpruned
 
 echo "OK"

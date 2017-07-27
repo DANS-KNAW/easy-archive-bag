@@ -18,7 +18,9 @@
   become: yes
   tasks:
   - name: Install standard software
-    yum: name="{{ item }}"
+    yum:
+      name: "{{ item }}"
+      state: latest
     with_items:
       - httpd
       - libselinux-python
@@ -68,6 +70,9 @@
   - include_role:
       name: yum-repo
 
+  - include_role:
+      name: postgresql
+
   - name: Installing packages
     yum:
       name: "{{ item }}"
@@ -83,7 +88,8 @@
       regexp: '^{{ item.key }}.*$'
       replace: '{{ item.key }}={{ item.value }}'
     with_items:
-      - { key: 'tempdir', value: '/home/vagrant/easy-archive-bag-staging' }
+      - { key: 'default.storage-service-url', value: 'http://localhost:20110/stores/default/' }
+      - { key: 'tempdir', value: '/var/opt/dans.knaw.nl/tmp/easy-archive-bag-staging' }
 
   - name: Configure application (bag-store application.properties)
     replace:
@@ -100,6 +106,32 @@
       replace: '{{ item.key }}={{ item.value }}'
     with_items:
       - { key: 'bag-index.bag-store.base-dirs', value: '/srv/dans.knaw.nl/bag-store' }
+# TODO uncomment all of this when the bag-index has removed creating the database from the rpm
+#      - { key: 'bag-index.database.password',  value: 'easy_bag_index' }
+#
+#  - name: Check if database exists
+#    command: sudo -u postgres psql -c "\c easy_bag_index" easy_bag_index
+#    ignore_errors: yes
+#    register: db_created
+#
+#  - name: Create owner user in PostGreSQL
+#    command: "sudo -u postgres psql -c \"CREATE ROLE easy_bag_index WITH LOGIN PASSWORD 'easy_bag_index'\""
+#    args:
+#      chdir: "/tmp"
+#    ignore_errors: yes
+#    when: db_created.rc != 0
+#
+#  - name: Create the database
+#    command: "sudo -u postgres psql -c \"CREATE DATABASE easy_bag_index WITH OWNER = easy_bag_index ENCODING = 'UTF8' CONNECTION LIMIT = -1\""
+#    args:
+#      chdir: "/tmp"
+#    when: db_created.rc != 0
+#
+#  - name: Create the tables
+#    command: "sudo -u postgres psql -d easy_bag_index -f /opt/dans.knaw.nl/easy-bag-index/bin/db-tables.sql"
+#    args:
+#      chdir: "/tmp"
+#    when: db_created.rc != 0
 
   - service:
       name: "{{ item }}"

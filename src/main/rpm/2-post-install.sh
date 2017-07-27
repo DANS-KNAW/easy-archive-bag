@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2016 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+# Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@
 
 NUMBER_OF_INSTALLATIONS=$1
 MODULE_NAME=easy-archive-bag
-INSTALL_DIR=/opt/dans.knaw.nl/$MODULE_NAME
+INSTALL_DIR=/opt/dans.knaw.nl/${MODULE_NAME}
 PHASE="POST-INSTALL"
-ARCHIVE_STAGING_DIR=/home/vagrant/easy-archive-bag-staging
+ARCHIVE_STAGING_DIR=/var/opt/dans.knaw.nl/tmp/easy-archive-bag-staging
 
 echo "$PHASE: START (Number of current installations: $NUMBER_OF_INSTALLATIONS)"
 
-if [ ! -d $ARCHIVE_STAGING_DIR ]; then
+if [ ! -d ${ARCHIVE_STAGING_DIR} ]; then
     echo -n "Creating archive staging directory..."
-    mkdir $ARCHIVE_STAGING_DIR
-    chown $MODULE_NAME $ARCHIVE_STAGING_DIR
+    mkdir -p ${ARCHIVE_STAGING_DIR}
+    chmod 777 ${ARCHIVE_STAGING_DIR}
     echo "OK"
 fi
 

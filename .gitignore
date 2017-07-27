@@ -20,6 +20,7 @@
 /data-*/
 /.vagrant/
 /.yum-repo
+*.retry
 
 # Eclipse
 /.project

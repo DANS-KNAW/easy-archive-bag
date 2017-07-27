@@ -24,14 +24,12 @@ import java.util.UUID
 import gov.loc.repository.bagit.domain.Bag
 import gov.loc.repository.bagit.exceptions._
 import gov.loc.repository.bagit.reader.BagReader
-import nl.knaw.dans.easy.archivebag.EasyArchiveBag.BagId
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
 
-// TODO: Code duplication from easy-bag-index. Candidate for new library easy-bagit-lib (a facade over the LOC lib)
 trait BagFacadeComponent {
 
   val bagFacade: BagFacade

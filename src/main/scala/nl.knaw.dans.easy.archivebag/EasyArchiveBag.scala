@@ -19,7 +19,6 @@ import java.io._
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Path, Paths }
-import java.util.UUID
 
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
@@ -32,7 +31,7 @@ import org.apache.http.entity.{ ContentType, FileEntity }
 import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClient, HttpClients }
 
 import scala.util.control.NonFatal
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Success, Try }
 
 object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
 
