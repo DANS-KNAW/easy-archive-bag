@@ -89,7 +89,6 @@
       replace: '{{ item.key }}={{ item.value }}'
     with_items:
       - { key: 'default.storage-service-url', value: 'http://localhost:20110/stores/default/' }
-      - { key: 'tempdir', value: '/var/opt/dans.knaw.nl/tmp/easy-archive-bag-staging' }
 
   - name: Configure application (bag-store application.properties)
     replace:
