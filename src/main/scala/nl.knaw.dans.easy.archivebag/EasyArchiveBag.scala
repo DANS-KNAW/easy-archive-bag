@@ -19,7 +19,6 @@ import java.io._
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Path, Paths }
-import java.util.UUID
 
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
@@ -32,11 +31,10 @@ import org.apache.http.entity.{ ContentType, FileEntity }
 import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClient, HttpClients }
 
 import scala.util.control.NonFatal
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Success, Try }
 
 object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
-  import logger._
-  type BagId = UUID
+
   val bagFacade = new Bagit5Facade()
 
   def main(args: Array[String]) {
@@ -47,7 +45,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   def run(implicit ps: Parameters): Try[URI] = Try {
     // TODO: refactor this function not to rely on throwing of exceptions
     (for {
-      optVersionOfId <- getIsVersionOf(ps.bagDir.toPath)
+      optVersionOfId <- bagFacade.getIsVersionOf(ps.bagDir.toPath)
       optRefBagsTxt <- optVersionOfId.map(getBagSequence).getOrElse(Success(None))
       _ <- optRefBagsTxt.map(writeRefBagsTxt(ps.bagDir.toPath)).getOrElse(Success(()))
     } yield ()).get // trigger exception if result is Failure
@@ -58,44 +56,23 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     response.getStatusLine.getStatusCode match {
       case 201 =>
         val location = new URI(response.getFirstHeader("Location").getValue)
-        info(s"Bag archival location created at: $location")
-        addBagToIndex(ps.uuid).recover {
-          case t => warn(s"BAG ${ps.uuid} NOT ADDED TO BAG-INDEX. SUBSEQUENT REVISIONS WILL NOT BE PRUNED", t)
+        logger.info(s"Bag archival location created at: $location")
+        addBagToIndex(ps.bagId).recover {
+          case t => logger.warn(s"BAG ${ ps.bagId } NOT ADDED TO BAG-INDEX. SUBSEQUENT REVISIONS WILL NOT BE PRUNED", t)
         }
         zippedBag.delete()
         location
       case _ =>
-        throw new RuntimeException(s"Bag archiving failed: ${response.getStatusLine}")
+        throw new RuntimeException(s"Bag archiving failed: ${ response.getStatusLine }")
     }
-  }
-
-  private def getIsVersionOf(bagDir: Path): Try[Option[BagId]] = {
-    for {
-      info <- bagFacade.getBagInfo(bagDir)
-      versionOf <-info.get(IS_VERSION_OF_KEY)
-        .map(s => Try {
-          new URI(s)
-        }.flatMap(getIsVersionOfFromUri).map(Option(_)))
-        .getOrElse(Success(None))
-    } yield versionOf
-  }
-
-  // TODO: canditate for easy-bagit-lib
-  private def getIsVersionOfFromUri(uri: URI): Try[UUID] = {
-    if(uri.getScheme == "urn") {
-      val uuidPart = uri.getSchemeSpecificPart
-      val parts = uuidPart.split(':')
-      if (parts.length != 2) Failure(InvalidIsVersionOfException(uri.toASCIIString))
-      else Try { UUID.fromString(parts(1)) }
-    } else Failure(InvalidIsVersionOfException(uri.toASCIIString))
   }
 
   private def addBagToIndex(bagId: BagId)(implicit ps: Parameters): Try[Unit] = Try {
     val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
     val put = new HttpPut(ps.bagIndexService.resolve(s"bags/$bagId").toASCIIString)
-    info(s"Adding new bag to bag index with request: ${put.toString}")
+    logger.info(s"Adding new bag to bag index with request: ${ put.toString }")
     val response = http.execute(put)
-    if(response.getStatusLine.getStatusCode != 201) throw new IllegalStateException("Error trying to add bag to index")
+    if (response.getStatusLine.getStatusCode != 201) throw new IllegalStateException("Error trying to add bag to index")
   }
 
 
@@ -106,7 +83,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       get.addHeader("Accept", "text/plain;charset=utf-8")
       val sw = new StringWriter()
       val response = http.execute(get)
-      if(response.getStatusLine.getStatusCode != 200) throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
+      if (response.getStatusLine.getStatusCode != 200) throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
       IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
       Some(sw.toString)
     }
@@ -117,13 +94,14 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   }
 
   @throws[IOException]("when creating the temp file name failed")
-  private def generateUncreatedTempFile()(implicit ps: Parameters): File =  try {
+  private def generateUncreatedTempFile()(implicit ps: Parameters): File = try {
     val tempFile = File.createTempFile("easy-archive-bag-", ".zip", ps.tempDir)
     tempFile.delete()
     debug(s"Generated unique temporary file name: $tempFile")
     tempFile
-  } catch {
-    case NonFatal(e) => throw new IOException(s"Could not create temp file in ${ps.tempDir}: ${e.getMessage}", e)
+  }
+  catch {
+    case NonFatal(e) => throw new IOException(s"Could not create temp file in ${ ps.tempDir }: ${ e.getMessage }", e)
   }
 
   private def zipDir(dir: File, zip: File) = {
@@ -139,9 +117,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   private def putFile(file: File)(implicit s: Parameters): CloseableHttpResponse = {
     val md5hex = computeMd5(file).get
     debug(s"Content-MD5 = $md5hex")
-    info(s"Sending bag to ${s.storageDepositService}, id = ${s.uuid}, with user = ${s.username}, password = ****")
+    logger.info(s"Sending bag to ${ s.storageDepositService }, id = ${ s.bagId }, with user = ${ s.username }, password = ****")
     val http = createHttpClient(s.storageDepositService.getHost, s.storageDepositService.getPort, s.username, s.password)
-    val put = new HttpPut(s.storageDepositService.toURI.resolve("bags/").resolve(s.uuid.toString))
+    val put = new HttpPut(s.storageDepositService.toURI.resolve("bags/").resolve(s.bagId.toString))
     put.addHeader("Content-Disposition", "attachment; filename=bag.zip")
     put.addHeader("Content-MD5", md5hex)
     put.setEntity(new FileEntity(file, ContentType.create("application/zip")))
@@ -158,7 +136,8 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val is = Files.newInputStream(Paths.get(file.getPath))
     try {
       DigestUtils.md5Hex(is)
-    } finally {
+    }
+    finally {
       is.close()
     }
   }

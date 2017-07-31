@@ -16,7 +16,7 @@
 package nl.knaw.dans.easy
 
 import java.io.File
-import java.net.{URI, URL}
+import java.net.{ URI, URL }
 import java.nio.file.Path
 import java.util.UUID
 
@@ -25,7 +25,7 @@ package object archivebag {
   case class BagReaderException(bagDir: Path, cause: Throwable) extends Exception(s"The bag at '$bagDir' could not be read: ${ cause.getMessage }", cause)
   case class InvalidIsVersionOfException(value: String) extends Exception(s"Unsupported value in the bag-info.txt field Is-Version-Of: $value")
 
-  val IS_VERSION_OF_KEY = "Is-Version-Of"
+  type BagId = UUID
 
   case class Parameters(username: String,
                         password: String,
@@ -33,13 +33,5 @@ package object archivebag {
                         tempDir: File,
                         storageDepositService: URL,
                         bagIndexService: URI,
-                        uuid: UUID)
-
-  object Version {
-    def apply(): String = {
-      val props = new java.util.Properties()
-      props.load(Version.getClass.getResourceAsStream("/Version.properties"))
-      props.getProperty("application.version")
-    }
-  }
+                        bagId: BagId)
 }

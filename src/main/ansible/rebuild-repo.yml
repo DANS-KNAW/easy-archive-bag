@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
@@ -16,11 +15,7 @@
 #
 
 
-ARGS=$@
-APPHOME=home
-. apphome.sh
-
-mvn exec:java -Dapp.home=$APPHOME \
-              -Dconfig.file=$APPHOME/cfg/application.conf \
-              -Dlogback.configurationFile=$APPHOME/cfg/logback.xml \
-              -Dexec.args="$ARGS"
+- hosts: "test"
+  become: yes
+  roles:
+    - yum-repo

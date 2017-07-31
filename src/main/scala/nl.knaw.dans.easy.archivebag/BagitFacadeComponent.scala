@@ -16,8 +16,10 @@
 package nl.knaw.dans.easy.archivebag
 
 import java.io.IOException
+import java.net.URI
 import java.nio.file.Path
 import java.util.Map.Entry
+import java.util.UUID
 
 import gov.loc.repository.bagit.domain.Bag
 import gov.loc.repository.bagit.exceptions._
@@ -26,15 +28,16 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
-import scala.util.{ Failure, Try }
+import scala.util.{ Failure, Success, Try }
 
-// TODO: Code duplication from easy-bag-index. Candidate for new library easy-bagit-lib (a facade over the LOC lib)
 trait BagFacadeComponent {
 
   val bagFacade: BagFacade
 
+  val IS_VERSION_OF_KEY = "Is-Version-Of"
+
   trait BagFacade {
-    def getBagInfo(bagDir: Path): Try[Map[String, String]]
+    def getIsVersionOf(bagDir: Path): Try[Option[BagId]]
   }
 }
 
@@ -45,12 +48,21 @@ trait Bagit5FacadeComponent extends BagFacadeComponent {
 
     private def entryToTuple[K, V](entry: Entry[K, V]): (K, V) = entry.getKey -> entry.getValue
 
+    def getIsVersionOf(bagDir: Path): Try[Option[BagId]] = {
+      for {
+        info <- getBagInfo(bagDir)
+        versionOf <- info.get(IS_VERSION_OF_KEY)
+          .map(s => Try { new URI(s) }.flatMap(getIsVersionOfFromUri).map(Option(_)))
+          .getOrElse(Success(None))
+      } yield versionOf
+    }
+
     def getBagInfo(bagDir: Path): Try[Map[String, String]] = {
       trace(bagDir)
       getBag(bagDir).map(_.getMetadata.getAll.asScala.map(entryToTuple).toMap)
     }
 
-    private def getBag(bagDir: Path): Try[Bag] = Try {
+    def getBag(bagDir: Path): Try[Bag] = Try {
       bagReader.read(bagDir)
     }.recoverWith {
       case cause: IOException => Failure(NotABagDirException(bagDir, cause))
@@ -60,6 +72,17 @@ trait Bagit5FacadeComponent extends BagFacadeComponent {
       case cause: UnsupportedAlgorithmException => Failure(BagReaderException(bagDir, cause))
       case cause: InvalidBagitFileFormatException => Failure(BagReaderException(bagDir, cause))
       case NonFatal(cause) => Failure(NotABagDirException(bagDir, cause))
+    }
+
+    // TODO: canditate for easy-bagit-lib
+    private def getIsVersionOfFromUri(uri: URI): Try[UUID] = {
+      if (uri.getScheme == "urn") {
+        val uuidPart = uri.getSchemeSpecificPart
+        val parts = uuidPart.split(':')
+        if (parts.length != 2) Failure(InvalidIsVersionOfException(uri.toASCIIString))
+        else Try { UUID.fromString(parts(1)) }
+      }
+      else Failure(InvalidIsVersionOfException(uri.toASCIIString))
     }
   }
 }

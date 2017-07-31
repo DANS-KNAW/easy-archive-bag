@@ -21,12 +21,12 @@
     <parent>
        <groupId>nl.knaw.dans.shared</groupId>
        <artifactId>dans-scala-prototype</artifactId>
-       <version>1.47</version>
+       <version>1.50</version>
     </parent>
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-archive-bag</artifactId>
     <name>EASY Archive Bag</name>
-    <version>1.x-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
     <inceptionYear>2015</inceptionYear>
     <properties>
         <main-class>nl.knaw.dans.easy.archivebag.EasyArchiveBag</main-class>
@@ -88,6 +88,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.jsuereth</groupId>
+            <artifactId>scala-arm_2.11</artifactId>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>
@@ -136,4 +140,31 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>rpm</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <file>
+                    <exists>/usr/local/bin/rpm</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>rpm-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-rpm</id>
+                                <goals>
+                                    <goal>attached-rpm</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -28,25 +28,19 @@ object CommandLineOptions extends DebugEnhancedLogging {
   def parse(args: Array[String]): Parameters = {
     debug("Loading application.properties ...")
 
-    val homeDir = new File(System.getProperty("app.home"))
-    val props = {
-      val ps = new PropertiesConfiguration()
-      ps.setDelimiterParsingDisabled(true)
-      ps.load(new File(homeDir, "cfg/application.properties"))
-      ps
-    }
+    val configuration = Configuration()
     debug("Parsing command line ...")
-    val conf = new ScallopCommandLine(props, args)
-    conf.verify()
+    val cmd = new ScallopCommandLine(configuration, args)
+    cmd.verify()
 
     val settings = Parameters(
-      username = conf.username(),
-      password = conf.password(),
-      bagDir = conf.bagDirectory(),
-      tempDir = new File(props.getString("tempdir")),
-      storageDepositService = conf.storageServiceUrl(),
-      bagIndexService = new URI(props.getString("bag-index.uri")),
-      uuid = UUID.fromString(conf.uuid()))
+      username = cmd.username(),
+      password = cmd.password(),
+      bagDir = cmd.bagDirectory(),
+      tempDir = new File(configuration.properties.getString("tempdir")),
+      storageDepositService = cmd.storageServiceUrl(),
+      bagIndexService = new URI(configuration.properties.getString("bag-index.uri")),
+      bagId = UUID.fromString(cmd.uuid()))
 
     debug(s"Using the following settings: $settings")
 
@@ -54,30 +48,31 @@ object CommandLineOptions extends DebugEnhancedLogging {
   }
 }
 
-class ScallopCommandLine(props: PropertiesConfiguration, args: Array[String]) extends ScallopConf(args) {
+class ScallopCommandLine(configuration: Configuration, args: Array[String]) extends ScallopConf(args) {
 
   appendDefaultToDescription = true
   editBuilder(_.setHelpWidth(110))
 
   printedName = "easy-archive-bag"
-  version(s"$printedName ${Version()}")
-  banner(s"""
-                |Send a bag to archival storage.
-                |
-                |Usage: $printedName <bag-directory> [<storage-service-url>]
-                |Options:
-                |""".stripMargin)
+  version(s"$printedName ${ configuration.version }")
+  banner(
+    s"""
+       |Send a bag to archival storage.
+       |
+       |Usage: $printedName <bag-directory> [<storage-service-url>]
+       |Options:
+       |""".stripMargin)
 
   val username: ScallopOption[String] = opt[String]("username",
     descr = "Username to use for authentication/authorisation to the storage service",
-    default = props.getString("default.storage-service-username") match {
+    default = configuration.properties.getString("default.storage-service-username") match {
       case s: String => Some(s)
       case _ => throw new RuntimeException("No username provided")
     })
 
   val password: ScallopOption[String] = opt[String]("password",
     descr = "Password to use for authentication/authorisation to the storage service",
-    default = props.getString("default.storage-service-password") match {
+    default = configuration.properties.getString("default.storage-service-password") match {
       case s: String => Some(s)
       case _ => throw new RuntimeException("No password provided")
     })
@@ -86,23 +81,21 @@ class ScallopCommandLine(props: PropertiesConfiguration, args: Array[String]) ex
     descr = "Directory in BagIt format that will be sent to archival storage")
 
   val uuid: ScallopOption[String] = trailArg[String](
-    name= "uuid",
+    name = "uuid",
     descr = "Identifier for the bag in archival storage",
     required = true)
 
   val storageServiceUrl: ScallopOption[URL] = trailArg[URL](
     name = "storage-service-url",
     required = false,
-    default = props.getString("default.storage-service-url") match {
+    default = configuration.properties.getString("default.storage-service-url") match {
       case s: String => Some(new URL(s))
       case _ => throw new RuntimeException("No storage service URL provided")
     })
 
-
   validateFileExists(bagDirectory)
   validateOpt(bagDirectory) {
-    case Some(dir) =>
-      Right(Unit)
+    case Some(_) => Right(Unit)
     case _ => Left("Could not parse parameter <bag-directory>")
   }
 }
