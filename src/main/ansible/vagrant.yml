@@ -16,6 +16,8 @@
 
 - hosts: "test"
   become: yes
+  vars:
+    local_test_vm_install_httpd: no
   roles:
     - dans.local-test-vm-base
     - dans.local-yum-repo
@@ -36,7 +38,7 @@
   - name: Configure application (archive-bag application.properties)
     replace:
       dest: '/etc/opt/dans.knaw.nl/easy-archive-bag/application.properties'
-      regexp: '^{{ item.key }}.*$'
+      regexp: '^{{ item.key }}=.*$'
       replace: '{{ item.key }}={{ item.value }}'
     with_items:
       - { key: 'default.storage-service-url', value: 'http://localhost:20110/stores/default/' }
@@ -44,7 +46,7 @@
   - name: Configure application (bag-store application.properties)
     replace:
       dest: '/etc/opt/dans.knaw.nl/easy-bag-store/application.properties'
-      regexp: '^{{ item.key }}.*$'
+      regexp: '^{{ item.key }}=.*$'
       replace: '{{ item.key }}={{ item.value }}'
     with_items:
       - { key: 'daemon.external-base-uri', value: 'http://test.dans.knaw.nl/' }
@@ -52,7 +54,7 @@
   - name: Configure application (bag-index application.properties)
     replace:
       dest: '/etc/opt/dans.knaw.nl/easy-bag-index/application.properties'
-      regexp: '^{{ item.key }}.*$'
+      regexp: '^{{ item.key }}=.*$'
       replace: '{{ item.key }}={{ item.value }}'
     with_items:
       - { key: 'bag-index.bag-store.base-dirs', value: '/srv/dans.knaw.nl/bag-store' }
