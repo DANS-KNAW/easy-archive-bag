@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
@@ -15,6 +14,9 @@
 # limitations under the License.
 #
 
-
-export PATH=$PATH:/opt/bin
-
+- src: https://github.com/DANS-KNAW/dans.local-yum-repo
+  version: v1.0.0
+- src: https://github.com/DANS-KNAW/dans.local-test-vm-base
+  version: v1.0.0
+- src: https://github.com/DANS-KNAW/dans.postgresql
+  version: v1.0.0
