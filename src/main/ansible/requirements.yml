@@ -15,8 +15,8 @@
 #
 
 - src: https://github.com/DANS-KNAW/dans.local-yum-repo
-  version: v2.0.2
+  version: v2.1.0
 - src: https://github.com/DANS-KNAW/dans.local-test-vm-base
-  version: v1.0.0
+  version: v2.0.0
 - src: https://github.com/DANS-KNAW/dans.postgresql
-  version: v1.0.0
+  version: v1.0.1

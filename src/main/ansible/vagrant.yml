@@ -27,37 +27,37 @@
   become: yes
   tasks:
     - name: Installing packages
-        yum:
-          name: "{{ item }}"
-          state: latest
-        with_items:
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
           - dans.knaw.nl-easy-archive-bag
           - dans.knaw.nl-easy-bag-store
           - dans.knaw.nl-easy-bag-index
 
-  - name: Configure application (archive-bag application.properties)
-    replace:
-      dest: '/etc/opt/dans.knaw.nl/easy-archive-bag/application.properties'
-      regexp: '^{{ item.key }}=.*$'
-      replace: '{{ item.key }}={{ item.value }}'
-    with_items:
-      - { key: 'default.storage-service-url', value: 'http://localhost:20110/stores/default/' }
+    - name: Configure application (archive-bag application.properties)
+      replace:
+        dest: '/etc/opt/dans.knaw.nl/easy-archive-bag/application.properties'
+        regexp: '^{{ item.key }}=.*$'
+        replace: '{{ item.key }}={{ item.value }}'
+      with_items:
+        - { key: 'default.storage-service-url', value: 'http://localhost:20110/stores/default/' }
 
-  - name: Configure application (bag-store application.properties)
-    replace:
-      dest: '/etc/opt/dans.knaw.nl/easy-bag-store/application.properties'
-      regexp: '^{{ item.key }}=.*$'
-      replace: '{{ item.key }}={{ item.value }}'
-    with_items:
-      - { key: 'daemon.external-base-uri', value: 'http://test.dans.knaw.nl/' }
+    - name: Configure application (bag-store application.properties)
+      replace:
+        dest: '/etc/opt/dans.knaw.nl/easy-bag-store/application.properties'
+        regexp: '^{{ item.key }}=.*$'
+        replace: '{{ item.key }}={{ item.value }}'
+      with_items:
+        - { key: 'daemon.external-base-uri', value: 'http://test.dans.knaw.nl/' }
 
-  - name: Configure application (bag-index application.properties)
-    replace:
-      dest: '/etc/opt/dans.knaw.nl/easy-bag-index/application.properties'
-      regexp: '^{{ item.key }}=.*$'
-      replace: '{{ item.key }}={{ item.value }}'
-    with_items:
-      - { key: 'bag-index.bag-store.base-dirs', value: '/srv/dans.knaw.nl/bag-store' }
+    - name: Configure application (bag-index application.properties)
+      replace:
+        dest: '/etc/opt/dans.knaw.nl/easy-bag-index/application.properties'
+        regexp: '^{{ item.key }}=.*$'
+        replace: '{{ item.key }}={{ item.value }}'
+      with_items:
+        - { key: 'bag-index.bag-store.base-dirs', value: '/srv/dans.knaw.nl/bag-store' }
 # TODO uncomment all of this when the bag-index has removed creating the database from the rpm
 #      - { key: 'bag-index.database.password',  value: 'easy_bag_index' }
 #
@@ -85,10 +85,10 @@
 #      chdir: "/tmp"
 #    when: db_created.rc != 0
 
-  - service:
-      name: "{{ item }}"
-      state: restarted
-      enabled: yes
-    with_items:
-      - easy-bag-store
-      - easy-bag-index
+    - service:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      with_items:
+        - easy-bag-store
+        - easy-bag-index
