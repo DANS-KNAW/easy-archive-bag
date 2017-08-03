@@ -17,7 +17,6 @@
 
 NUMBER_OF_INSTALLATIONS=$1
 MODULE_NAME=easy-archive-bag
-INSTALL_DIR=/opt/dans.knaw.nl/${MODULE_NAME}
 PHASE="POST-INSTALL"
 ARCHIVE_STAGING_DIR=/var/opt/dans.knaw.nl/tmp/easy-archive-bag-staging
 
