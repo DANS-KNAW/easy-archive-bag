@@ -74,7 +74,7 @@ trait Bagit5FacadeComponent extends BagFacadeComponent {
       case NonFatal(cause) => Failure(NotABagDirException(bagDir, cause))
     }
 
-    // TODO: canditate for easy-bagit-lib
+    // TODO: candidate for easy-bagit-lib
     private def getIsVersionOfFromUri(uri: URI): Try[UUID] = {
       if (uri.getScheme == "urn") {
         val uuidPart = uri.getSchemeSpecificPart
