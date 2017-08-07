@@ -28,13 +28,17 @@ object Configuration {
 
   def apply(): Configuration = {
     val home = Paths.get(System.getProperty("app.home"))
-    val cfgPath = Seq(Paths.get(s"/etc/opt/dans.knaw.nl/easy-archive-bag/"), home.resolve("cfg"))
+    val defaultPath = Paths.get(s"/etc/opt/dans.knaw.nl/easy-archive-bag/")
+    val configuredPath = home.resolve("cfg")
+    val cfgPath = Seq(defaultPath, configuredPath)
       .find(Files.exists(_))
       .getOrElse { throw new IllegalStateException("No configuration directory found") }
 
+    val versionFile = home.resolve("bin/version").toFile
+    val configFile = cfgPath.resolve("application.properties").toFile
     new Configuration(
-      version = managed(Source.fromFile(home.resolve("bin/version").toFile)).acquireAndGet(_.mkString),
-      properties = new PropertiesConfiguration(cfgPath.resolve("application.properties").toFile)
+      version = managed(Source.fromFile(versionFile)).acquireAndGet(_.mkString),
+      properties = new PropertiesConfiguration(configFile)
     )
   }
 }
