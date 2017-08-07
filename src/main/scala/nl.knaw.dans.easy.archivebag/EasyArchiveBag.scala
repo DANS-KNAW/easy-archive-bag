@@ -25,6 +25,7 @@ import net.lingala.zip4j.model.ZipParameters
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.{ FileUtils, IOUtils }
+import org.apache.http.HttpStatus
 import org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
 import org.apache.http.client.methods.{ CloseableHttpResponse, HttpGet, HttpPut }
 import org.apache.http.entity.{ ContentType, FileEntity }
@@ -54,7 +55,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     zipDir(ps.bagDir, zippedBag)
     val response = putFile(zippedBag)
     response.getStatusLine.getStatusCode match {
-      case 201 =>
+      case HttpStatus.SC_CREATED =>
         val location = new URI(response.getFirstHeader("Location").getValue)
         logger.info(s"Bag archival location created at: $location")
         addBagToIndex(ps.bagId).recover {
@@ -72,7 +73,8 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val put = new HttpPut(ps.bagIndexService.resolve(s"bags/$bagId").toASCIIString)
     logger.info(s"Adding new bag to bag index with request: ${ put.toString }")
     val response = http.execute(put)
-    if (response.getStatusLine.getStatusCode != 201) throw new IllegalStateException("Error trying to add bag to index")
+
+    if (response.getStatusLine.getStatusCode != HttpStatus.SC_CREATED) throw new IllegalStateException("Error trying to add bag to index")
   }
 
 
@@ -83,7 +85,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       get.addHeader("Accept", "text/plain;charset=utf-8")
       val sw = new StringWriter()
       val response = http.execute(get)
-      if (response.getStatusLine.getStatusCode != 200) throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
+      if (response.getStatusLine.getStatusCode != HttpStatus.SC_OK) throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
       IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
       Some(sw.toString)
     }
