@@ -14,8 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -e # abort when a command fails
 
 DATADIR=data
+
+if [ -e ${DATADIR} ]; then
+    mv ${DATADIR} ${DATADIR}-`date  +"%Y-%m-%d@%H:%M:%S"`
+fi
+mkdir ${DATADIR}
 
 touch ${DATADIR}/easy-archive-bag.log
 
