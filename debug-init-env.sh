@@ -18,9 +18,10 @@
 set -e # abort when a command fails
 
 DATADIR=data
+DATEVAL=$(date  +"%Y-%m-%d@%H:%M:%S")
 
 if [ -e ${DATADIR} ]; then
-    mv ${DATADIR} ${DATADIR}-`date  +"%Y-%m-%d@%H:%M:%S"`
+    mv ${DATADIR} ${DATADIR}-${DATEVAL}
 fi
 mkdir ${DATADIR}
 
