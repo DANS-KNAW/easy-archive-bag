@@ -40,6 +40,3 @@ data/y          unchanged               => reference in fetch.txt to b
 data/y-old      unchanged               => reference in fetch.txt to a
 [data/v]        deleted                 => not present here, no reference in fetch.txt
 data/z          restored file from a    => actual file if only b is ref-bag, reference in fetch.txt if a is also ref-bag
-
-
-
