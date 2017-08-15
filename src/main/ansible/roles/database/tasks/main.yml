@@ -1,6 +1,5 @@
-#!/usr/bin/env bash
 #
-# Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+# Copyright (C) 2017 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +14,11 @@
 # limitations under the License.
 #
 
-NUMBER_OF_INSTALLATIONS=$1
-MODULE_NAME=easy-archive-bag
-PHASE="POST-INSTALL"
-ARCHIVE_STAGING_DIR=/var/opt/dans.knaw.nl/tmp/easy-archive-bag-staging
+- name: Create role for service
+  shell: "sudo -u postgres psql -c \"CREATE ROLE easy_bag_index WITH LOGIN PASSWORD 'changeme'\""
 
-echo "$PHASE: START (Number of current installations: $NUMBER_OF_INSTALLATIONS)"
+- name: Create database
+  shell: "sudo -u postgres psql -c \"CREATE DATABASE easy_bag_index OWNER easy_bag_index\""
 
-if [ ! -d ${ARCHIVE_STAGING_DIR} ]; then
-    echo -n "Creating archive staging directory..."
-    mkdir -p ${ARCHIVE_STAGING_DIR}
-    chmod 777 ${ARCHIVE_STAGING_DIR}
-    echo "OK"
-fi
-
-echo "$PHASE: DONE"
+- name: Create database schema
+  shell: "sudo -u postgres psql easy_bag_index < /opt/dans.knaw.nl/easy-bag-index/install/db-tables.sql"
