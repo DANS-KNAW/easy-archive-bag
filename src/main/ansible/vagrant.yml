@@ -41,19 +41,6 @@
   - name: Reload ansible_local
     setup: filter=ansible_local
 
-  - name: Install packages
-    yum:
-      name: "{{ item }}"
-      state: latest
-    with_items:
-        - dans.knaw.nl-easy-archive-bag
-        - dans.knaw.nl-easy-bag-store
-        - dans.knaw.nl-easy-bag-index
-
-  - include_role:
-      name: database
-    when: ansible_local.conditions.database_not_installed
-
   - name: Create directories
     file:
       path: "{{ item }}"
@@ -64,6 +51,27 @@
         - /srv/dans.knaw.nl/bag-store
         - /srv/dans.knaw.nl/stage
         - /var/opt/dans.knaw.nl/tmp/easy-archive-bag-staging
+        - /home/vagrant/test-dir
+
+  - name: Copy test-data to vagrant home
+    copy:
+      src: ../../test/resources/bags/basic-sequence-unpruned/
+      dest: /home/vagrant/test-dir/
+      mode: "0777"
+      directory_mode: "0777"
+
+  - name: Install packages
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+        - dans.knaw.nl-easy-bag-store
+        - dans.knaw.nl-easy-bag-index
+        - dans.knaw.nl-easy-archive-bag
+
+  - include_role:
+      name: database
+    when: ansible_local.conditions.database_not_installed
 
   - service:
       name: "{{ item }}"

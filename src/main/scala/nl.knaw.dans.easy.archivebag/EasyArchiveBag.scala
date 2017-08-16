@@ -39,7 +39,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   val bagFacade = new Bagit5Facade()
 
   def main(args: Array[String]) {
-    implicit val settings = CommandLineOptions.parse(args)
+    implicit val settings: Parameters = CommandLineOptions.parse(args)
     run.get
   }
 
@@ -106,7 +106,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     case NonFatal(e) => throw new IOException(s"Could not create temp file in ${ ps.tempDir }: ${ e.getMessage }", e)
   }
 
-  private def zipDir(dir: File, zip: File) = {
+  private def zipDir(dir: File, zip: File): Unit = {
     debug(s"Zipping directory $dir to file $zip")
     if (zip.exists) zip.delete
     val zf = new ZipFile(zip) {
