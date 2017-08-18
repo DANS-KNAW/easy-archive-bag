@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 
 BINPATH=`readlink -f $0`
-APPHOME=`dirname \`dirname ${BINPATH} \``
+APPHOME=`dirname \`dirname $BINPATH \``
 FHS_CONFIG=/etc/opt/dans.knaw.nl/easy-archive-bag/
 
 if [ -f $HOME/logback.xml ]
 then
     LOGCONFIG=$HOME/logback.xml
-elif [ -d ${FHS_CONFIG} ]
+elif [ -d $FHS_CONFIG ]
 then
-    LOGCONFIG=${FHS_CONFIG}/logback.xml
+    LOGCONFIG=$FHS_CONFIG/logback.xml
 else
-    LOGCONFIG=${APPHOME}/cfg/logback.xml
+    LOGCONFIG=$APPHOME/cfg/logback.xml
 fi
 
-java -Dlogback.configurationFile=${LOGCONFIG} \
-     -Dapp.home=${APPHOME} \
-     -jar ${APPHOME}/bin/easy-archive-bag.jar $@
+java -Dlogback.configurationFile=$LOGCONFIG \
+     -Dapp.home=$APPHOME \
+     -jar $APPHOME/bin/easy-archive-bag.jar $@
