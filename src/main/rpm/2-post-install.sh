@@ -22,10 +22,10 @@ ARCHIVE_STAGING_DIR=/var/opt/dans.knaw.nl/tmp/easy-archive-bag-staging
 
 echo "$PHASE: START (Number of current installations: $NUMBER_OF_INSTALLATIONS)"
 
-if [ ! -d ${ARCHIVE_STAGING_DIR} ]; then
+if [ ! -d $ARCHIVE_STAGING_DIR ]; then
     echo -n "Creating archive staging directory..."
-    mkdir -p ${ARCHIVE_STAGING_DIR}
-    chmod 777 ${ARCHIVE_STAGING_DIR}
+    mkdir -p $ARCHIVE_STAGING_DIR
+    chmod 777 $ARCHIVE_STAGING_DIR
     echo "OK"
 fi
 

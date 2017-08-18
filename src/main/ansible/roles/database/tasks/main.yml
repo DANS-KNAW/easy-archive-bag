@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
 #
@@ -15,15 +14,11 @@
 # limitations under the License.
 #
 
-DATADIR=data
+- name: Create role for service
+  shell: "sudo -u postgres psql -c \"CREATE ROLE easy_bag_index WITH LOGIN PASSWORD 'changeme'\""
 
-touch $DATADIR/easy-archive-bag.log
+- name: Create database
+  shell: "sudo -u postgres psql -c \"CREATE DATABASE easy_bag_index OWNER easy_bag_index\""
 
-echo "Creating staging area in $DATADIR..."
-mkdir -p $DATADIR/easy-archive-bag-staging
-
-echo "Copy bags to $DATADIR..."
-mkdir $DATADIR/bags
-cp -r src/test/resources/bags/basic-sequence-unpruned $DATADIR/bags/basic-sequence-unpruned
-
-echo "OK"
+- name: Create database schema
+  shell: "sudo -u postgres psql easy_bag_index < /opt/dans.knaw.nl/easy-bag-index/install/db-tables.sql"

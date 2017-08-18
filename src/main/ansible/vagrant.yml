@@ -26,69 +26,47 @@
 - hosts: "test"
   become: yes
   tasks:
-    - name: Installing packages
-      yum:
-        name: "{{ item }}"
-        state: latest
-      with_items:
-          - dans.knaw.nl-easy-archive-bag
-          - dans.knaw.nl-easy-bag-store
-          - dans.knaw.nl-easy-bag-index
+  - name: Ensure /etc/ansible/facts.d exists
+    file:
+      path: /etc/ansible/facts.d
+      recurse: yes
+      state: directory
 
-    - name: Configure application (archive-bag application.properties)
-      replace:
-        dest: '/etc/opt/dans.knaw.nl/easy-archive-bag/application.properties'
-        regexp: '^{{ item.key }}=.*$'
-        replace: '{{ item.key }}={{ item.value }}'
-      with_items:
-        - { key: 'default.storage-service-url', value: 'http://localhost:20110/stores/default/' }
+  - name: Copy facts-scripts to server
+    copy:
+      src: conditions.fact
+      dest: /etc/ansible/facts.d/
+      mode: "u+x"
+    register: result
 
-    - name: Configure application (bag-store application.properties)
-      replace:
-        dest: '/etc/opt/dans.knaw.nl/easy-bag-store/application.properties'
-        regexp: '^{{ item.key }}=.*$'
-        replace: '{{ item.key }}={{ item.value }}'
-      with_items:
-        - { key: 'daemon.external-base-uri', value: 'http://test.dans.knaw.nl/' }
+  - name: Reload ansible_local
+    setup: filter=ansible_local
+    when: result.changed
 
-    - name: Configure application (bag-index application.properties)
-      replace:
-        dest: '/etc/opt/dans.knaw.nl/easy-bag-index/application.properties'
-        regexp: '^{{ item.key }}=.*$'
-        replace: '{{ item.key }}={{ item.value }}'
-      with_items:
-        - { key: 'bag-index.bag-store.base-dirs', value: '/srv/dans.knaw.nl/bag-store' }
-# TODO uncomment all of this when the bag-index has removed creating the database from the rpm
-#      - { key: 'bag-index.database.password',  value: 'easy_bag_index' }
-#
-#  - name: Check if database exists
-#    command: sudo -u postgres psql -c "\c easy_bag_index" easy_bag_index
-#    ignore_errors: yes
-#    register: db_created
-#
-#  - name: Create owner user in PostGreSQL
-#    command: "sudo -u postgres psql -c \"CREATE ROLE easy_bag_index WITH LOGIN PASSWORD 'easy_bag_index'\""
-#    args:
-#      chdir: "/tmp"
-#    ignore_errors: yes
-#    when: db_created.rc != 0
-#
-#  - name: Create the database
-#    command: "sudo -u postgres psql -c \"CREATE DATABASE easy_bag_index WITH OWNER = easy_bag_index ENCODING = 'UTF8' CONNECTION LIMIT = -1\""
-#    args:
-#      chdir: "/tmp"
-#    when: db_created.rc != 0
-#
-#  - name: Create the tables
-#    command: "sudo -u postgres psql -d easy_bag_index -f /opt/dans.knaw.nl/easy-bag-index/bin/db-tables.sql"
-#    args:
-#      chdir: "/tmp"
-#    when: db_created.rc != 0
+  - name: Copy test-data to vagrant home
+    copy:
+      src: ../../test/resources/bags/basic-sequence-unpruned/
+      dest: /home/vagrant/test-data/
+      mode: "0777"
+      directory_mode: "0777"
 
-    - service:
-        name: "{{ item }}"
-        state: restarted
-        enabled: yes
-      with_items:
+  - name: Install packages
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+        - dans.knaw.nl-easy-bag-store
+        - dans.knaw.nl-easy-bag-index
+        - dans.knaw.nl-easy-archive-bag
+
+  - include_role:
+      name: database
+    when: ansible_local.conditions.database_not_installed
+
+  - service:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+    with_items:
         - easy-bag-store
         - easy-bag-index

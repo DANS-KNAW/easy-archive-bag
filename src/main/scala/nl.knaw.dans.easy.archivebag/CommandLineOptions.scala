@@ -20,7 +20,6 @@ import java.net.{ URI, URL }
 import java.util.UUID
 
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.commons.configuration.PropertiesConfiguration
 import org.rogach.scallop.{ ScallopConf, ScallopOption }
 
 object CommandLineOptions extends DebugEnhancedLogging {
@@ -59,7 +58,7 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
     s"""
        |Send a bag to archival storage.
        |
-       |Usage: $printedName <bag-directory> [<storage-service-url>]
+       |Usage: $printedName <bag-directory> <uuid> [<storage-service-url>]
        |Options:
        |""".stripMargin)
 
