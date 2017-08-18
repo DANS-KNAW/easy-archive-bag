@@ -43,22 +43,10 @@
     setup: filter=ansible_local
     when: result.changed
 
-  - name: Create directories
-    file:
-      path: "{{ item }}"
-      recurse: yes
-      state: directory
-      mode: "0777"
-    with_items:
-        - /srv/dans.knaw.nl/bag-store
-        - /srv/dans.knaw.nl/stage
-        - /var/opt/dans.knaw.nl/tmp/easy-archive-bag-staging
-        - /home/vagrant/test-dir
-
   - name: Copy test-data to vagrant home
     copy:
       src: ../../test/resources/bags/basic-sequence-unpruned/
-      dest: /home/vagrant/test-dir/
+      dest: /home/vagrant/test-data/
       mode: "0777"
       directory_mode: "0777"
 
