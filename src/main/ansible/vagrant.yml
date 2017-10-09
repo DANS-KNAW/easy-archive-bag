@@ -43,6 +43,31 @@
     setup: filter=ansible_local
     when: result.changed
 
+# TODO move the following jobs about Rsyslog to the dans.local-test-vm-base role
+  - name: add easylog to rsyslog configuration
+    lineinfile:
+      path: /etc/rsyslog.conf
+      line: 'local0.* /var/log/easylog'
+    register: add_to_easylog
+
+  - name: modify rsyslog configuration (turn on UDP syslog reception and customize log formatting)
+    replace:
+      path: /etc/rsyslog.conf
+      regexp: "{{ item.old }}"
+      replace: "{{ item.new }}"
+    with_items:
+        - { old: '#\$ModLoad imudp', new: '$ModLoad imudp' }
+        - { old: '#\$UDPServerRun 514', new: '$UDPServerRun 514' }
+        - { old: '\$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat', new: '$template CustomFormat,"%HOSTNAME% %syslogtag%%msg:::sp-if-no-1st-sp%%msg:::drop-last-lf%\\n"\n$ActionFileDefaultTemplate CustomFormat' }
+    register: update_easylog
+
+  - name: restart rsyslog if the config file was changed
+    service:
+      name: rsyslog
+      state: restarted
+      enabled: yes
+    when: add_to_easylog.changed or update_easylog.changed
+
   - name: Copy test-data to vagrant home
     copy:
       src: ../../test/resources/bags/basic-sequence-unpruned/
