@@ -43,8 +43,8 @@
     setup: filter=ansible_local
     when: result.changed
 
-  - include_role:
-      name: logstash
+#  - include_role:
+#      name: logstash
 
   - name: Copy test-data to vagrant home
     copy:
