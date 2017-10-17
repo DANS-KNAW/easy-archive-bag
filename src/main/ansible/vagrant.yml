@@ -43,6 +43,9 @@
     setup: filter=ansible_local
     when: result.changed
 
+  - include_role:
+      name: logstash
+
   - name: Copy test-data to vagrant home
     copy:
       src: ../../test/resources/bags/basic-sequence-unpruned/
