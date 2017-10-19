@@ -6,5 +6,6 @@ def can_connect_to_postgresql_db(db):
     return os.system('sudo -u postgres psql -U postgres -c "\q" ' + db) == 0
 
 print json.dumps({
-   'database_not_installed': not can_connect_to_postgresql_db('easy_bag_index')
+    'database_not_installed': not can_connect_to_postgresql_db('easy_bag_index'),
+    'test_data_does_not_exist': not os.path.exists('/home/vagrant/test-data/')
 })

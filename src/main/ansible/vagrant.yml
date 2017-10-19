@@ -49,6 +49,7 @@
       dest: /home/vagrant/test-data/
       mode: "0777"
       directory_mode: "0777"
+    when: ansible_local.conditions.test_data_does_not_exist
 
   - name: Install packages
     yum:
