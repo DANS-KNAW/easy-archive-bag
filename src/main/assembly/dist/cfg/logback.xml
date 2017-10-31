@@ -17,9 +17,25 @@
             <pattern>[%date{ISO8601}] %-5level %msg%n</pattern>
         </encoder>
     </appender>
+
+    <appender name="KAFKA"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/var/log/easy-archive-bag-kafka.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/var/log/easy-archive-bag-kafka.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%date{ISO8601}] %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <root level="warn">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT" level="off"/>
     </root>
     <logger name="nl.knaw.dans.easy" level="info"/>
+    <logger name="kafka-logger" level="info" additivity="false">
+        <appender-ref ref="KAFKA"/>
+    </logger>
 </configuration>

@@ -30,6 +30,7 @@ import org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
 import org.apache.http.client.methods.{ CloseableHttpResponse, HttpGet, HttpPut }
 import org.apache.http.entity.{ ContentType, FileEntity }
 import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClient, HttpClients }
+import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
 import scala.util.{ Success, Try }
@@ -37,6 +38,7 @@ import scala.util.{ Success, Try }
 object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
 
   val bagFacade = new Bagit5Facade()
+  val kafkaLogger = LoggerFactory.getLogger("kafka-logger")
 
   def main(args: Array[String]) {
     implicit val settings: Parameters = CommandLineOptions.parse(args)
@@ -47,6 +49,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     // TODO: refactor this function not to rely on throwing of exceptions
     (for {
       optVersionOfId <- bagFacade.getIsVersionOf(ps.bagDir.toPath)
+      _ = optVersionOfId
+        .map(baseId => kafkaLogger.info(s"${ ps.bagId } - bag is a version of $baseId"))
+        .getOrElse(kafkaLogger.info(s"${ ps.bagId } - bag is the first in a sequence"))
       optRefBagsTxt <- optVersionOfId.map(getBagSequence).getOrElse(Success(None))
       _ <- optRefBagsTxt.map(writeRefBagsTxt(ps.bagDir.toPath)).getOrElse(Success(()))
     } yield ()).get // trigger exception if result is Failure
@@ -54,6 +59,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val zippedBag = generateUncreatedTempFile()
     zipDir(ps.bagDir, zippedBag)
     val response = putFile(zippedBag)
+    kafkaLogger.info(s"${ ps.bagId } - Archiving bag to bag store results in ${ response.getStatusLine }")
     response.getStatusLine.getStatusCode match {
       case HttpStatus.SC_CREATED =>
         val location = new URI(response.getFirstHeader("Location").getValue)
@@ -72,8 +78,10 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
     val put = new HttpPut(ps.bagIndexService.resolve(s"bags/$bagId").toASCIIString)
     logger.info(s"Adding new bag to bag index with request: ${ put.toString }")
+    kafkaLogger.info(s"${ ps.bagId } - Registering bag in bag index at url ${ ps.bagIndexService }")
     val response = http.execute(put)
 
+    kafkaLogger.info(s"${ ps.bagId } - Registering bag in bag index results in ${ response.getStatusLine }")
     if (response.getStatusLine.getStatusCode != HttpStatus.SC_CREATED) throw new IllegalStateException("Error trying to add bag to index")
   }
 
@@ -120,6 +128,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val md5hex = computeMd5(file).get
     debug(s"Content-MD5 = $md5hex")
     logger.info(s"Sending bag to ${ s.storageDepositService }, id = ${ s.bagId }, with user = ${ s.username }, password = ****")
+    kafkaLogger.info(s"${ s.bagId } - Archiving bag to bag store at url ${ s.storageDepositService }")
     val http = createHttpClient(s.storageDepositService.getHost, s.storageDepositService.getPort, s.username, s.password)
     val put = new HttpPut(s.storageDepositService.toURI.resolve("bags/").resolve(s.bagId.toString))
     put.addHeader("Content-Disposition", "attachment; filename=bag.zip")

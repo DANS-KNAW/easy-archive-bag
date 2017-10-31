@@ -64,6 +64,9 @@
         - dans.knaw.nl-easy-archive-bag
 
   - include_role:
+      name: httpd
+
+  - include_role:
       name: database
     when: ansible_local.conditions.database_not_installed
 
