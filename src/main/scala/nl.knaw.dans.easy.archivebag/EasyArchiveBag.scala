@@ -22,6 +22,7 @@ import java.nio.file.{ Files, Path, Paths }
 
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
+import nl.knaw.dans.lib.error.TryExtensions
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.{ FileUtils, IOUtils }
@@ -40,7 +41,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
 
   def main(args: Array[String]) {
     implicit val settings: Parameters = CommandLineOptions.parse(args)
-    run.get
+    run.unsafeGetOrThrow
   }
 
   def run(implicit ps: Parameters): Try[URI] = Try {

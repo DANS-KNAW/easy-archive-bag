@@ -17,6 +17,7 @@ package nl.knaw.dans.easy.archivebag
 
 import java.io.File
 import java.net.{ URI, URL }
+import java.nio.file.Paths
 import java.util.UUID
 
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -27,7 +28,7 @@ object CommandLineOptions extends DebugEnhancedLogging {
   def parse(args: Array[String]): Parameters = {
     debug("Loading application.properties ...")
 
-    val configuration = Configuration()
+    val configuration = Configuration(Paths.get(System.getProperty("app.home")))
     debug("Parsing command line ...")
     val cmd = new ScallopCommandLine(configuration, args)
     cmd.verify()
