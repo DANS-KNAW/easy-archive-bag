@@ -63,35 +63,34 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
        |Options:
        |""".stripMargin)
 
-  val username: ScallopOption[String] = opt[String]("username",
+  val username: ScallopOption[String] = opt[String](
+    name = "username",
+    short = 'u',
     descr = "Username to use for authentication/authorisation to the storage service",
-    default = configuration.properties.getString("default.storage-service-username") match {
-      case s: String => Some(s)
-      case _ => throw new RuntimeException("No username provided")
-    })
+    required = true,
+  )
 
-  val password: ScallopOption[String] = opt[String]("password",
+  val password: ScallopOption[String] = opt[String](
+    name = "password",
+    short = 'p',
     descr = "Password to use for authentication/authorisation to the storage service",
-    default = configuration.properties.getString("default.storage-service-password") match {
-      case s: String => Some(s)
-      case _ => throw new RuntimeException("No password provided")
-    })
+    required = true,
+  )
 
-  val bagDirectory: ScallopOption[File] = trailArg[File](name = "bag-directory", required = true,
-    descr = "Directory in BagIt format that will be sent to archival storage")
+  val bagDirectory: ScallopOption[File] = trailArg[File](
+    name = "bag-directory",
+    descr = "Directory in BagIt format that will be sent to archival storage",
+  )
 
   val uuid: ScallopOption[String] = trailArg[String](
     name = "uuid",
     descr = "Identifier for the bag in archival storage",
-    required = true)
+  )
 
   val storageServiceUrl: ScallopOption[URL] = trailArg[URL](
     name = "storage-service-url",
-    required = false,
-    default = configuration.properties.getString("default.storage-service-url") match {
-      case s: String => Some(new URL(s))
-      case _ => throw new RuntimeException("No storage service URL provided")
-    })
+    descr = "base url to the store in which the bag needs to be archived",
+  )
 
   validateFileExists(bagDirectory)
   validateOpt(bagDirectory) {

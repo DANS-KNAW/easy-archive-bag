@@ -43,13 +43,11 @@
     setup: filter=ansible_local
     when: result.changed
 
-  - name: Copy test-data to vagrant home
-    copy:
-      src: ../../test/resources/bags/basic-sequence-unpruned/
-      dest: /home/vagrant/test-data/
-      mode: "0777"
-      directory_mode: "0777"
-    when: ansible_local.conditions.test_data_does_not_exist
+  - name: Create link to test data
+    file:
+      src: /vagrant/src/test/resources/bags
+      dest: /home/vagrant/test-data
+      state: link
 
   - name: Install packages
     yum:
