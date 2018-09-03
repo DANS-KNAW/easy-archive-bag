@@ -38,7 +38,7 @@ object CommandLineOptions extends DebugEnhancedLogging {
       password = cmd.password(),
       bagDir = cmd.bagDirectory(),
       tempDir = new File(configuration.properties.getString("tempdir")),
-      storageDepositService = cmd.storageServiceUrl(),
+      storageDepositService = cmd.bagStoreUrl(),
       bagIndexService = new URI(configuration.properties.getString("bag-index.uri")),
       bagId = UUID.fromString(cmd.uuid()))
 
@@ -87,8 +87,8 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
     descr = "Identifier for the bag in archival storage",
   )
 
-  val storageServiceUrl: ScallopOption[URL] = trailArg[URL](
-    name = "storage-service-url",
+  val bagStoreUrl: ScallopOption[URL] = trailArg[URL](
+    name = "bag-store-url",
     descr = "base url to the store in which the bag needs to be archived",
   )
 
