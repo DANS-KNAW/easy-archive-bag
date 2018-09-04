@@ -34,6 +34,7 @@ import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClie
 
 import scala.util.control.NonFatal
 import scala.util.{ Success, Try }
+import nl.knaw.dans.lib.string._
 
 object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
 
@@ -81,16 +82,17 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   }
 
 
-  private def getBagSequence(bagId: BagId)(implicit ps: Parameters): Try[Option[String]] = {
-    Try {
-      val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
-      val get = new HttpGet(ps.bagIndexService.resolve(s"bag-sequence?contains=$bagId"))
-      get.addHeader("Accept", "text/plain;charset=utf-8")
-      val sw = new StringWriter()
-      val response = http.execute(get)
-      if (response.getStatusLine.getStatusCode != HttpStatus.SC_OK) throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
-      IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
-      Some(sw.toString)
+  private def getBagSequence(bagId: BagId)(implicit ps: Parameters): Try[Option[String]] = Try {
+    val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
+    val get = new HttpGet(ps.bagIndexService.resolve(s"bag-sequence?contains=$bagId"))
+    get.addHeader("Accept", "text/plain;charset=utf-8")
+    val sw = new StringWriter()
+    val response = http.execute(get)
+    if (response.getStatusLine.getStatusCode != HttpStatus.SC_OK) throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
+    IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
+    sw.toString match {
+      case s if s.isBlank => None
+      case s => Some(s)
     }
   }
 
