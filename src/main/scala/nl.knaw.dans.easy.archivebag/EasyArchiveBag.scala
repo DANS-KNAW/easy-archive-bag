@@ -33,7 +33,7 @@ import org.apache.http.entity.{ ContentType, FileEntity }
 import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClient, HttpClients }
 
 import scala.util.control.NonFatal
-import scala.util.{ Success, Try }
+import scala.util.{ Failure, Success, Try }
 import nl.knaw.dans.lib.string._
 
 object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
@@ -68,7 +68,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       case HttpStatus.SC_UNAUTHORIZED =>
         throw UnautherizedException(ps.bagId)
       case _ =>
-        throw new RuntimeException(s"Bag archiving failed: ${ps.storageDepositService.toString} returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag")
+        throw new RuntimeException(s"Bag archiving failed: ${ps.storageDepositService} returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag")
     }
   }
 
@@ -88,12 +88,18 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     get.addHeader("Accept", "text/plain;charset=utf-8")
     val sw = new StringWriter()
     val response = http.execute(get)
-    if (response.getStatusLine.getStatusCode != HttpStatus.SC_OK) throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
+    val statusLine = response.getStatusLine
+    if (statusLine.getStatusCode != HttpStatus.SC_OK)
+      throwBagNotFoud(bagId, s"bag index [${get.getURI}] returned ${statusLine.getStatusCode} ${statusLine.getReasonPhrase}")
     IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
     sw.toString match {
-      case s if s.isBlank => None
+      case s if s.isBlank => throwBagNotFoud(bagId, s"is not found in bag index [${get.getURI}]")
       case s => Some(s)
     }
+  }
+
+  private def throwBagNotFoud (bagId: BagId, reason: String) = {
+    throw new IllegalStateException(s"Bag with bag-id $bagId, pointed to by Is-Version-Of field in bag-info.txt, $reason")
   }
 
   private def writeRefBagsTxt(bagDir: Path)(refBagsTxt: String): Try[Unit] = Try {
