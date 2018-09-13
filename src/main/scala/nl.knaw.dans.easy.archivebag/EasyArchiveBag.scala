@@ -90,16 +90,17 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val response = http.execute(get)
     val statusLine = response.getStatusLine
     if (statusLine.getStatusCode != HttpStatus.SC_OK)
-      throwBagNotFoud(bagId, s"bag index [${get.getURI}] returned ${statusLine.getStatusCode} ${statusLine.getReasonPhrase}")
+      throwBagNotFoud(bagId, s"[${get.getURI}] returned ${statusLine.getStatusCode} ${statusLine.getReasonPhrase}")
     IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
     sw.toString match {
-      case s if s.isBlank => throwBagNotFoud(bagId, s"is not found in bag index [${get.getURI}]")
+      case s if s.isBlank => throwBagNotFoud(bagId, s"Empty response body from [${get.getURI}]")
       case s => Some(s)
     }
   }
 
   private def throwBagNotFoud (bagId: BagId, reason: String) = {
-    throw new IllegalStateException(s"Bag with bag-id $bagId, pointed to by Is-Version-Of field in bag-info.txt, $reason")
+    logger.error(reason)
+    throw new IllegalStateException(s"Bag with bag-id $bagId, pointed to by Is-Version-Of field in bag-info.txt is not found in bag index.")
   }
 
   private def writeRefBagsTxt(bagDir: Path)(refBagsTxt: String): Try[Unit] = Try {
