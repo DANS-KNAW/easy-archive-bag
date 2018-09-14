@@ -68,7 +68,8 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       case HttpStatus.SC_UNAUTHORIZED =>
         throw UnautherizedException(ps.bagId)
       case _ =>
-        throw new RuntimeException(s"Bag archiving failed: ${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag")
+        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag")
+        throw new RuntimeException(s"Bag archiving failed: ${ response.getStatusLine }")
     }
   }
 
