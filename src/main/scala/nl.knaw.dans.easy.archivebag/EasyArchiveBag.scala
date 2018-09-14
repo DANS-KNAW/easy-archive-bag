@@ -24,6 +24,7 @@ import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import nl.knaw.dans.lib.error.TryExtensions
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import nl.knaw.dans.lib.string._
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.{ FileUtils, IOUtils }
 import org.apache.http.HttpStatus
@@ -67,6 +68,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       case HttpStatus.SC_UNAUTHORIZED =>
         throw UnautherizedException(ps.bagId)
       case _ =>
+        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag")
         throw new RuntimeException(s"Bag archiving failed: ${ response.getStatusLine }")
     }
   }
@@ -80,17 +82,22 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     if (response.getStatusLine.getStatusCode != HttpStatus.SC_CREATED) throw new IllegalStateException("Error trying to add bag to index")
   }
 
-
-  private def getBagSequence(bagId: BagId)(implicit ps: Parameters): Try[Option[String]] = {
-    Try {
-      val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
-      val get = new HttpGet(ps.bagIndexService.resolve(s"bag-sequence?contains=$bagId"))
-      get.addHeader("Accept", "text/plain;charset=utf-8")
-      val sw = new StringWriter()
-      val response = http.execute(get)
-      if (response.getStatusLine.getStatusCode != HttpStatus.SC_OK) throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
-      IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
-      Some(sw.toString)
+  private def getBagSequence(bagId: BagId)(implicit ps: Parameters): Try[Option[String]] = Try {
+    val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
+    val get = new HttpGet(ps.bagIndexService.resolve(s"bag-sequence?contains=$bagId"))
+    get.addHeader("Accept", "text/plain;charset=utf-8")
+    val sw = new StringWriter()
+    val response = http.execute(get)
+    val statusLine = response.getStatusLine
+    if (statusLine.getStatusCode != HttpStatus.SC_OK) throw new IllegalStateException(
+      s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ statusLine.getStatusCode } ${ statusLine.getReasonPhrase }"
+    )
+    IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
+    sw.toString match {
+      case s if s.isBlank =>
+        logger.error(s"Empty response body from [${ get.getURI }]")
+        throw InvalidIsVersionOfException(s"Bag with bag-id $bagId, pointed to by Is-Version-Of field in bag-info.txt is not found in bag index.")
+      case s => Some(s)
     }
   }
 
