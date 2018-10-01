@@ -49,8 +49,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     // TODO: refactor this function not to rely on throwing of exceptions
     (for {
       optVersionOfId <- bagFacade.getIsVersionOf(ps.bagDir.toPath)
-      optRefBagsTxt <- optVersionOfId.map(getBagSequence).getOrElse(Success(None))
-      _ <- optRefBagsTxt.map(writeRefBagsTxt(ps.bagDir.toPath)).getOrElse(Success(()))
+      _ <- optVersionOfId.map(handleRefBags).getOrElse(Success(()))
     } yield ()).get // trigger exception if result is Failure
 
     val zippedBag = generateUncreatedTempFile()
@@ -82,7 +81,14 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     if (response.getStatusLine.getStatusCode != HttpStatus.SC_CREATED) throw new IllegalStateException("Error trying to add bag to index")
   }
 
-  private def getBagSequence(bagId: BagId)(implicit ps: Parameters): Try[Option[String]] = Try {
+  private def handleRefBags(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
+    for {
+      refBagsTxt <- getBagSequence(versionOfId)
+      _ <- writeRefBagsTxt(ps.bagDir.toPath)(refBagsTxt)
+    } yield ()
+  }
+
+  private def getBagSequence(bagId: BagId)(implicit ps: Parameters): Try[String] = Try {
     val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
     val get = new HttpGet(ps.bagIndexService.resolve(s"bag-sequence?contains=$bagId"))
     get.addHeader("Accept", "text/plain;charset=utf-8")
@@ -97,7 +103,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       case s if s.isBlank =>
         logger.error(s"Empty response body from [${ get.getURI }]")
         throw InvalidIsVersionOfException(s"Bag with bag-id $bagId, pointed to by Is-Version-Of field in bag-info.txt is not found in bag index.")
-      case s => Some(s)
+      case s => s
     }
   }
 
