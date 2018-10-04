@@ -49,7 +49,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     // TODO: refactor this function not to rely on throwing of exceptions
     (for {
       optVersionOfId <- bagFacade.getIsVersionOf(ps.bagDir.toPath)
-      _ <- optVersionOfId.map(handleRefBags).getOrElse(Success(()))
+      _ <- optVersionOfId.map(createRefBagsTxt).getOrElse(Success(()))
     } yield ()).get // trigger exception if result is Failure
 
     val zippedBag = generateUncreatedTempFile()
@@ -81,7 +81,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     if (response.getStatusLine.getStatusCode != HttpStatus.SC_CREATED) throw new IllegalStateException("Error trying to add bag to index")
   }
 
-  private def handleRefBags(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
+  private def createRefBagsTxt(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
     for {
       refBagsTxt <- getBagSequence(versionOfId)
       _ <- writeRefBagsTxt(ps.bagDir.toPath)(refBagsTxt)
