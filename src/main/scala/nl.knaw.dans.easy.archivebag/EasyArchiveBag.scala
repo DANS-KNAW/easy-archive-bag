@@ -27,7 +27,7 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.string._
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.{ FileUtils, IOUtils }
-import org.apache.http.HttpStatus
+import org.apache.http.{ HttpStatus, StatusLine }
 import org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
 import org.apache.http.client.methods.{ CloseableHttpResponse, HttpGet, HttpPut }
 import org.apache.http.entity.{ ContentType, FileEntity }
@@ -64,6 +64,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
         }
         zippedBag.delete()
         location
+      case HttpStatus.SC_BAD_REQUEST =>
+        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag reason = ${ response.getStatusLine.getReasonPhrase }")
+        throw new RuntimeException(s"Bag archiving failed: ${ response.getStatusLine }")
       case HttpStatus.SC_UNAUTHORIZED =>
         throw UnautherizedException(ps.bagId)
       case _ =>
@@ -77,8 +80,15 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val put = new HttpPut(ps.bagIndexService.resolve(s"bags/$bagId").toASCIIString)
     logger.info(s"Adding new bag to bag index with request: ${ put.toString }")
     val response = http.execute(put)
-
-    if (response.getStatusLine.getStatusCode != HttpStatus.SC_CREATED) throw new IllegalStateException("Error trying to add bag to index")
+    val statusLine = response.getStatusLine
+    statusLine.getStatusCode match {
+      case HttpStatus.SC_CREATED =>
+      case HttpStatus.SC_BAD_GATEWAY =>
+        logger.error(s"Bad request while adding new bag to bag index  with message = ${ statusLine.getReasonPhrase }")
+        throw new IllegalStateException("Error trying to add bag to index")
+      case _ => //TODO shouldn't this also try to log as much as possible?
+        throw new IllegalStateException("Error trying to add bag to index")
+    }
   }
 
   private def createRefBagsTxt(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
@@ -95,9 +105,13 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val sw = new StringWriter()
     val response = http.execute(get)
     val statusLine = response.getStatusLine
-    if (statusLine.getStatusCode != HttpStatus.SC_OK) throw new IllegalStateException(
-      s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ statusLine.getStatusCode } ${ statusLine.getReasonPhrase }"
-    )
+    statusLine.getStatusCode match {
+      case HttpStatus.SC_OK =>
+      case HttpStatus.SC_BAD_REQUEST =>
+        logger.error(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ HttpStatus.SC_BAD_REQUEST } ${ statusLine.getReasonPhrase }")
+        throw createFailedHttpRequestException(bagId, get, statusLine)
+      case _ => throw createFailedHttpRequestException(bagId, get, statusLine)
+    }
     IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
     sw.toString match {
       case s if s.isBlank =>
@@ -105,6 +119,10 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
         throw InvalidIsVersionOfException(s"Bag with bag-id $bagId, pointed to by Is-Version-Of field in bag-info.txt is not found in bag index.")
       case s => s
     }
+  }
+
+  private def createFailedHttpRequestException(bagId: BagId, get: HttpGet, statusLine: StatusLine): IllegalStateException = {
+    new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ statusLine.getStatusCode } ${ statusLine.getReasonPhrase }")
   }
 
   private def writeRefBagsTxt(bagDir: Path)(refBagsTxt: String): Try[Unit] = Try {
