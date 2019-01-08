@@ -110,7 +110,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val response = http.execute(get)
     val statusLine = response.getStatusLine
     statusLine.getStatusCode match {
-      case HttpStatus.SC_OK =>
+      case HttpStatus.SC_OK => // do nothing
       case HttpStatus.SC_BAD_REQUEST =>
         logger.error(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ HttpStatus.SC_BAD_REQUEST } ${ statusLine.getReasonPhrase }")
         throw createFailedHttpRequestException(bagId, get, statusLine)
