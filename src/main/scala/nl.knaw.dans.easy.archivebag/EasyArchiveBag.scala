@@ -65,7 +65,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
         zippedBag.delete()
         location
       case HttpStatus.SC_BAD_REQUEST =>
-        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag reason = ${ response.getStatusLine.getReasonPhrase }")
+        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag")
         throw new RuntimeException(s"Bag archiving failed: ${ response.getStatusLine }")
       case HttpStatus.SC_UNAUTHORIZED =>
         throw UnautherizedException(ps.bagId)
@@ -84,11 +84,15 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     statusLine.getStatusCode match {
       case HttpStatus.SC_CREATED =>
       case HttpStatus.SC_BAD_GATEWAY =>
-        logger.error(s"Bad request while adding new bag to bag index  with message = ${ statusLine.getReasonPhrase }")
-        throw new IllegalStateException("Error trying to add bag to index")
-      case _ => //TODO shouldn't this also try to log as much as possible?
-        throw new IllegalStateException("Error trying to add bag to index")
+        logErrorAndCreateFailedHttpRequestException(statusLine)
+      case _ =>
+        logErrorAndCreateFailedHttpRequestException(statusLine)
     }
+  }
+
+  private def logErrorAndCreateFailedHttpRequestException(statusLine: StatusLine) = {
+    logger.error(s"Bad request while adding new bag to bag index  with message = ${ statusLine.getReasonPhrase }")
+    throw new IllegalStateException("Error trying to add bag to index")
   }
 
   private def createRefBagsTxt(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
