@@ -64,9 +64,6 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
         }
         zippedBag.delete()
         location
-      case HttpStatus.SC_BAD_REQUEST =>
-        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag")
-        throw new RuntimeException(s"Bag archiving failed: ${ response.getStatusLine }")
       case HttpStatus.SC_UNAUTHORIZED =>
         throw UnautherizedException(ps.bagId)
       case _ =>
@@ -90,11 +87,6 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     }
   }
 
-  private def logErrorAndCreateFailedHttpRequestException(statusLine: StatusLine) = {
-    logger.error(s"Bad request while adding new bag to bag index  with message = ${ statusLine.getReasonPhrase }")
-    throw new IllegalStateException("Error trying to add bag to index")
-  }
-
   private def createRefBagsTxt(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
     for {
       refBagsTxt <- getBagSequence(versionOfId)
@@ -111,10 +103,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val statusLine = response.getStatusLine
     statusLine.getStatusCode match {
       case HttpStatus.SC_OK => // do nothing
-      case HttpStatus.SC_BAD_REQUEST =>
+      case _ =>
         logger.error(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ HttpStatus.SC_BAD_REQUEST } ${ statusLine.getReasonPhrase }")
-        throw createFailedHttpRequestException(bagId, get, statusLine)
-      case _ => throw createFailedHttpRequestException(bagId, get, statusLine)
+        throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
     }
     IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
     sw.toString match {
@@ -125,8 +116,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     }
   }
 
-  private def createFailedHttpRequestException(bagId: BagId, get: HttpGet, statusLine: StatusLine): IllegalStateException = {
-    new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ statusLine.getStatusCode } ${ statusLine.getReasonPhrase }")
+  private def logErrorAndCreateFailedHttpRequestException(statusLine: StatusLine) = {
+    logger.error(s"Bad request while adding new bag to bag index  with message = ${ statusLine.getReasonPhrase }")
+    throw new IllegalStateException("Error trying to add bag to index")
   }
 
   private def writeRefBagsTxt(bagDir: Path)(refBagsTxt: String): Try[Unit] = Try {
