@@ -81,7 +81,8 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     statusLine.getStatusCode match {
       case HttpStatus.SC_CREATED => // do nothing
       case _ =>
-        logErrorAndCreateFailedHttpRequestException(statusLine)
+        logger.error(s"Bad request while adding new bag to bag index  with message = ${ statusLine.getReasonPhrase }")
+        throw new IllegalStateException("Error trying to add bag to index")
     }
   }
 
@@ -114,10 +115,6 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     }
   }
 
-  private def logErrorAndCreateFailedHttpRequestException(statusLine: StatusLine) = {
-    logger.error(s"Bad request while adding new bag to bag index  with message = ${ statusLine.getReasonPhrase }")
-    throw new IllegalStateException("Error trying to add bag to index")
-  }
 
   private def writeRefBagsTxt(bagDir: Path)(refBagsTxt: String): Try[Unit] = Try {
     FileUtils.write(bagDir.resolve("refbags.txt").toFile, refBagsTxt, "UTF-8")
