@@ -115,7 +115,6 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     }
   }
 
-
   private def writeRefBagsTxt(bagDir: Path)(refBagsTxt: String): Try[Unit] = Try {
     FileUtils.write(bagDir.resolve("refbags.txt").toFile, refBagsTxt, "UTF-8")
   }
