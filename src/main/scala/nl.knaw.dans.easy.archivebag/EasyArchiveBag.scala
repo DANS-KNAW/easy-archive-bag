@@ -27,7 +27,7 @@ import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.string._
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.{ FileUtils, IOUtils }
-import org.apache.http.{ HttpStatus, StatusLine }
+import org.apache.http.HttpStatus
 import org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
 import org.apache.http.client.methods.{ CloseableHttpResponse, HttpGet, HttpPut }
 import org.apache.http.entity.{ ContentType, FileEntity }
