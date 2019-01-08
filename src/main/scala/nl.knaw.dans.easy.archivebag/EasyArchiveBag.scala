@@ -80,8 +80,6 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val statusLine = response.getStatusLine
     statusLine.getStatusCode match {
       case HttpStatus.SC_CREATED => // do nothing
-      case HttpStatus.SC_BAD_GATEWAY =>
-        logErrorAndCreateFailedHttpRequestException(statusLine)
       case _ =>
         logErrorAndCreateFailedHttpRequestException(statusLine)
     }
