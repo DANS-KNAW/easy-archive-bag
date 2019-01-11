@@ -82,7 +82,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     statusLine.getStatusCode match {
       case HttpStatus.SC_CREATED => // do nothing
       case _ =>
-        logger.error(s"Bad request while adding new bag to bag index  with message = ${ statusLine.getReasonPhrase } body = ${ getBodyFromResponse(response) }")
+        logger.error(s"Bad request while adding new bag to bag index  with reasonPhrase = ${ statusLine.getReasonPhrase } body = ${ getBodyFromResponse(response) }")
         throw new IllegalStateException("Error trying to add bag to index")
     }
   }
