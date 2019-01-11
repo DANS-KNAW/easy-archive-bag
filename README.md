@@ -44,7 +44,7 @@ and will install the service script for `initd` or `systemd`. It will also set u
 at `/srv/dans.kanw.nl/bag-store`.
 
 If you are on a system that does not support RPM, you can use the tarball. You will need to copy the
-service scripts to the appropiate locations yourself.
+service scripts to the appropriate locations yourself.
 
 BUILDING FROM SOURCE
 --------------------
