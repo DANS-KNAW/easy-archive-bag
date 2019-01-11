@@ -68,7 +68,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       case HttpStatus.SC_UNAUTHORIZED =>
         throw UnautherizedException(ps.bagId)
       case _ =>
-        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag body = ${ getBodyFromResponse(response) }")
+        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag body = ${ getResponseBody(response) }")
         throw new RuntimeException(s"Bag archiving failed: ${ response.getStatusLine }")
     }
   }
@@ -82,7 +82,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     statusLine.getStatusCode match {
       case HttpStatus.SC_CREATED => // do nothing
       case _ =>
-        logger.error(s"Bad request while adding new bag to bag index  with reasonPhrase = ${ statusLine.getReasonPhrase } body = ${ getBodyFromResponse(response) }")
+        logger.error(s"Bad request while adding new bag to bag index  with reasonPhrase = ${ statusLine.getReasonPhrase } body = ${ getResponseBody(response) }")
         throw new IllegalStateException("Error trying to add bag to index")
     }
   }
@@ -104,7 +104,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     statusLine.getStatusCode match {
       case HttpStatus.SC_OK => // do nothing
       case _ =>
-        logger.error(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ HttpStatus.SC_BAD_REQUEST } ${ statusLine.getReasonPhrase } with body = ${ getBodyFromResponse(response) }")
+        logger.error(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ HttpStatus.SC_BAD_REQUEST } ${ statusLine.getReasonPhrase } with body = ${ getResponseBody(response) }")
         throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
     }
     IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
@@ -159,7 +159,8 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     HttpClients.custom.setDefaultCredentialsProvider(credsProv).build()
   }
 
-  private def getBodyFromResponse(response: CloseableHttpResponse): String = Source.fromInputStream(response.getEntity.getContent).mkString
+  //TODO is this save?
+  private def getResponseBody(response: CloseableHttpResponse): String = Source.fromInputStream(response.getEntity.getContent).mkString
 
   private def computeMd5(file: File): Try[String] = Try {
     val is = Files.newInputStream(Paths.get(file.getPath))
