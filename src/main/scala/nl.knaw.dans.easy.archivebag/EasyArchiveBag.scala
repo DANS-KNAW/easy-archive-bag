@@ -104,7 +104,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     statusLine.getStatusCode match {
       case HttpStatus.SC_OK => // do nothing
       case _ =>
-        logger.error(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ HttpStatus.SC_BAD_REQUEST } ${ statusLine.getReasonPhrase }")
+        logger.error(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ HttpStatus.SC_BAD_REQUEST } ${ statusLine.getReasonPhrase } with body = ${ getBodyFromResponse(response) }")
         throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
     }
     IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
