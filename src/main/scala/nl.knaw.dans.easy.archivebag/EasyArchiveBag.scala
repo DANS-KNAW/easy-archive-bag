@@ -159,8 +159,10 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     HttpClients.custom.setDefaultCredentialsProvider(credsProv).build()
   }
 
-  //TODO is this save?
-  private def getResponseBody(response: CloseableHttpResponse): String = Source.fromInputStream(response.getEntity.getContent).mkString
+  private def getResponseBody(response: CloseableHttpResponse): String =  {
+   Try (Source.fromInputStream(response.getEntity.getContent).mkString)
+     .fold(t => s"responseBody not available: ${ t.getMessage}", body => body)
+  }
 
   private def computeMd5(file: File): Try[String] = Try {
     val is = Files.newInputStream(Paths.get(file.getPath))
