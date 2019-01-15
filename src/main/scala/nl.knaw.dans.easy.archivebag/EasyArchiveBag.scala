@@ -160,7 +160,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   }
 
   private def getResponseBody(response: CloseableHttpResponse): String =  {
-   Try (Source.fromInputStream(response.getEntity.getContent).mkString)
+    Try(managed(Source.fromInputStream(response.getEntity.getContent)).acquireAndGet(_.mkString))
      .fold(t => s"responseBody not available: ${ t.getMessage}", body => body)
   }
 
