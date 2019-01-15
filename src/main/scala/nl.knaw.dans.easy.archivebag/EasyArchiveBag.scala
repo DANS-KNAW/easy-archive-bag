@@ -32,6 +32,7 @@ import org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
 import org.apache.http.client.methods.{ CloseableHttpResponse, HttpGet, HttpPut }
 import org.apache.http.entity.{ ContentType, FileEntity }
 import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClient, HttpClients }
+import resource.managed
 
 import scala.io.Source
 import scala.util.control.NonFatal
@@ -82,7 +83,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     statusLine.getStatusCode match {
       case HttpStatus.SC_CREATED => // do nothing
       case _ =>
-        logger.error(s"Bad request while adding new bag to bag index  with reasonPhrase = ${ statusLine.getReasonPhrase } body = ${ getResponseBody(response) }")
+        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ] while adding new bag to bag index. ResponseBody = ${ getResponseBody(response) }")
         throw new IllegalStateException("Error trying to add bag to index")
     }
   }
@@ -104,8 +105,8 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     statusLine.getStatusCode match {
       case HttpStatus.SC_OK => // do nothing
       case _ =>
-        logger.error(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ HttpStatus.SC_BAD_REQUEST } ${ statusLine.getReasonPhrase } with body = ${ getResponseBody(response) }")
-        throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId")
+        logger.error(s"${ get.getURI } returned: [ $statusLine ] while getting bag Sequence for bag $bagId. ResponseBody = ${ getResponseBody(response) }")
+        throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ statusLine.getStatusCode } ${ statusLine.getReasonPhrase }")
     }
     IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
     sw.toString match {
@@ -159,9 +160,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     HttpClients.custom.setDefaultCredentialsProvider(credsProv).build()
   }
 
-  private def getResponseBody(response: CloseableHttpResponse): String =  {
+  private def getResponseBody(response: CloseableHttpResponse): String = {
     Try(managed(Source.fromInputStream(response.getEntity.getContent)).acquireAndGet(_.mkString))
-     .fold(t => s"responseBody not available: ${ t.getMessage}", body => body)
+      .fold(t => s"responseBody not available: ${ t.getMessage }", body => body)
   }
 
   private def computeMd5(file: File): Try[String] = Try {
