@@ -32,7 +32,9 @@ import org.apache.http.auth.{ AuthScope, UsernamePasswordCredentials }
 import org.apache.http.client.methods.{ CloseableHttpResponse, HttpGet, HttpPut }
 import org.apache.http.entity.{ ContentType, FileEntity }
 import org.apache.http.impl.client.{ BasicCredentialsProvider, CloseableHttpClient, HttpClients }
+import resource.managed
 
+import scala.io.Source
 import scala.util.control.NonFatal
 import scala.util.{ Success, Try }
 
@@ -67,7 +69,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       case HttpStatus.SC_UNAUTHORIZED =>
         throw UnautherizedException(ps.bagId)
       case _ =>
-        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag")
+        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ]. ZippedBag=$zippedBag body = ${ getResponseBody(response) }")
         throw new RuntimeException(s"Bag archiving failed: ${ response.getStatusLine }")
     }
   }
@@ -77,8 +79,13 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val put = new HttpPut(ps.bagIndexService.resolve(s"bags/$bagId").toASCIIString)
     logger.info(s"Adding new bag to bag index with request: ${ put.toString }")
     val response = http.execute(put)
-
-    if (response.getStatusLine.getStatusCode != HttpStatus.SC_CREATED) throw new IllegalStateException("Error trying to add bag to index")
+    val statusLine = response.getStatusLine
+    statusLine.getStatusCode match {
+      case HttpStatus.SC_CREATED => // do nothing
+      case _ =>
+        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.getStatusLine } ] while adding new bag to bag index. ResponseBody = ${ getResponseBody(response) }")
+        throw new IllegalStateException("Error trying to add bag to index")
+    }
   }
 
   private def createRefBagsTxt(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
@@ -95,9 +102,12 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val sw = new StringWriter()
     val response = http.execute(get)
     val statusLine = response.getStatusLine
-    if (statusLine.getStatusCode != HttpStatus.SC_OK) throw new IllegalStateException(
-      s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ statusLine.getStatusCode } ${ statusLine.getReasonPhrase }"
-    )
+    statusLine.getStatusCode match {
+      case HttpStatus.SC_OK => // do nothing
+      case _ =>
+        logger.error(s"${ get.getURI } returned: [ $statusLine ] while getting bag Sequence for bag $bagId. ResponseBody = ${ getResponseBody(response) }")
+        throw new IllegalStateException(s"Error retrieving bag-sequence for bag: $bagId. [${ get.getURI }] returned ${ statusLine.getStatusCode } ${ statusLine.getReasonPhrase }")
+    }
     IOUtils.copy(response.getEntity.getContent, sw, "UTF-8")
     sw.toString match {
       case s if s.isBlank =>
@@ -148,6 +158,11 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     val credsProv = new BasicCredentialsProvider
     credsProv.setCredentials(new AuthScope(host, port), new UsernamePasswordCredentials(user, password))
     HttpClients.custom.setDefaultCredentialsProvider(credsProv).build()
+  }
+
+  private def getResponseBody(response: CloseableHttpResponse): String = {
+    Try(managed(Source.fromInputStream(response.getEntity.getContent)).acquireAndGet(_.mkString))
+      .fold(t => s"responseBody not available: ${ t.getMessage }", body => body)
   }
 
   private def computeMd5(file: File): Try[String] = Try {
