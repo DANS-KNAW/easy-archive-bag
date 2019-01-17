@@ -16,15 +16,14 @@
 package nl.knaw.dans.easy.archivebag
 
 import java.io.File
-import java.net.{ URI, URL }
+import java.net.{ MalformedURLException, URI, URL }
 import java.nio.file.Paths
 import java.util.UUID
 
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.rogach.scallop.{ ScallopConf, ScallopOption }
+import org.rogach.scallop.{ ScallopConf, ScallopOption, ValueConverter, singleArgConverter }
 
 object CommandLineOptions extends DebugEnhancedLogging {
-
   def parse(args: Array[String]): Parameters = {
     debug("Loading application.properties ...")
 
@@ -49,6 +48,15 @@ object CommandLineOptions extends DebugEnhancedLogging {
 }
 
 class ScallopCommandLine(configuration: Configuration, args: Array[String]) extends ScallopConf(args) {
+
+  private implicit val urlConverter: ValueConverter[URL] = singleArgConverter(s => new URL(addTrailingSlashIfNeeded(s)), {
+    case e: MalformedURLException => Left(s"bad URL, ${ e.getMessage }")
+  })
+
+  private def addTrailingSlashIfNeeded(s: String): String = {
+    if (s endsWith "/") s
+    else s"$s/"
+  }
 
   appendDefaultToDescription = true
   editBuilder(_.setHelpWidth(110))
