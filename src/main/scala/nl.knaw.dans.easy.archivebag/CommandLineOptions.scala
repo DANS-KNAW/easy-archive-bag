@@ -21,7 +21,7 @@ import java.nio.file.Paths
 import java.util.UUID
 
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.rogach.scallop.{ DefaultConverters, ScallopConf, ScallopOption, ValueConverter }
+import org.rogach.scallop.{ ScallopConf, ScallopOption, ValueConverter, singleArgConverter }
 
 object CommandLineOptions extends DebugEnhancedLogging {
   def parse(args: Array[String]): Parameters = {
@@ -47,8 +47,7 @@ object CommandLineOptions extends DebugEnhancedLogging {
   }
 }
 
-class ScallopCommandLine(configuration: Configuration, args: Array[String]) extends ScallopConf(args)
-  with DefaultConverters {
+class ScallopCommandLine(configuration: Configuration, args: Array[String]) extends ScallopConf(args) {
 
   private implicit val urlConverter: ValueConverter[URL] = singleArgConverter(s => new URL(addTrailingSlashIfNeeded(s)), {
     case e: MalformedURLException => Left(s"bad URL, ${ e.getMessage }")
