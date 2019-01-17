@@ -16,15 +16,14 @@
 package nl.knaw.dans.easy.archivebag
 
 import java.io.File
-import java.net.{ URI, URL }
+import java.net.{ MalformedURLException, URI, URL }
 import java.nio.file.Paths
 import java.util.UUID
 
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.rogach.scallop.{ ScallopConf, ScallopOption }
+import org.rogach.scallop.{ DefaultConverters, ScallopConf, ScallopOption, ValueConverter }
 
 object CommandLineOptions extends DebugEnhancedLogging {
-
   def parse(args: Array[String]): Parameters = {
     debug("Loading application.properties ...")
 
@@ -48,7 +47,17 @@ object CommandLineOptions extends DebugEnhancedLogging {
   }
 }
 
-class ScallopCommandLine(configuration: Configuration, args: Array[String]) extends ScallopConf(args) {
+class ScallopCommandLine(configuration: Configuration, args: Array[String]) extends ScallopConf(args)
+  with DefaultConverters {
+
+  private implicit val urlConverter: ValueConverter[URL] = singleArgConverter(s => new URL(addTrailingSlashIfNeeded(s)), {
+    case e: MalformedURLException => Left("bad URL, %s" format e.getMessage)
+  })
+
+  private def addTrailingSlashIfNeeded(s: String): String = {
+    if (s endsWith "/") s
+    else s"$s/"
+  }
 
   appendDefaultToDescription = true
   editBuilder(_.setHelpWidth(110))
@@ -90,7 +99,7 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
   val bagStoreUrl: ScallopOption[URL] = trailArg[URL](
     name = "bag-store-url",
     descr = "base url to the store in which the bag needs to be archived",
-  ).map(url => if (url.toString.endsWith("/")) url else new URL(url.toString.concat("/")))
+  )
 
   validateFileExists(bagDirectory)
   validateOpt(bagDirectory) {
