@@ -90,7 +90,7 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
   val bagStoreUrl: ScallopOption[URL] = trailArg[URL](
     name = "bag-store-url",
     descr = "base url to the store in which the bag needs to be archived",
-  )
+  ).map(url => if (url.toString.endsWith("/")) url else new URL(url.toString.concat("/")))
 
   validateFileExists(bagDirectory)
   validateOpt(bagDirectory) {
