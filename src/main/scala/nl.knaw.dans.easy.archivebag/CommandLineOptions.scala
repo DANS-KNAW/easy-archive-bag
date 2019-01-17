@@ -51,7 +51,7 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
   with DefaultConverters {
 
   private implicit val urlConverter: ValueConverter[URL] = singleArgConverter(s => new URL(addTrailingSlashIfNeeded(s)), {
-    case e: MalformedURLException => Left("bad URL, %s" format e.getMessage)
+    case e: MalformedURLException => Left(s"bad URL, ${ e.getMessage }")
   })
 
   private def addTrailingSlashIfNeeded(s: String): String = {
