@@ -54,13 +54,13 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       zippedBag <- generateUncreatedTempFile()
       _ <- zipDir(ps.bagDir, zippedBag)
       response <- putFile(zippedBag)
-      location <- response.map(handleStorageResponse).tried.flatten
+      location <- response.map(handleBagStoreResponse).tried.flatten
         .doIfSuccess(_ => zippedBag.delete())
         .doIfFailure { case _ => zippedBag.delete() }
     } yield location
   }
 
-  private def handleStorageResponse(response: CloseableHttpResponse)(implicit ps: Parameters) = {
+  private def handleBagStoreResponse(response: CloseableHttpResponse)(implicit ps: Parameters) = {
     response.getStatusLine.getStatusCode match {
       case HttpStatus.SC_CREATED =>
         Try { new URI(response.getFirstHeader("Location").getValue) }
