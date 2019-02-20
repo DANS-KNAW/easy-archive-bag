@@ -39,7 +39,9 @@ object CommandLineOptions extends DebugEnhancedLogging {
       tempDir = new File(configuration.properties.getString("tempdir")),
       storageDepositService = cmd.bagStoreUrl(),
       bagIndexService = new URI(configuration.properties.getString("bag-index.uri")),
-      bagId = UUID.fromString(cmd.uuid()))
+      bagId = UUID.fromString(cmd.uuid()),
+      userAgent = s"easy-archive-bag/${configuration.version}",
+    )
 
     debug(s"Using the following settings: $settings")
 

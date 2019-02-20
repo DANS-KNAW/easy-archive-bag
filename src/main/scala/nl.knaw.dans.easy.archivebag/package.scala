@@ -34,5 +34,7 @@ package object archivebag {
                         tempDir: File,
                         storageDepositService: URL,
                         bagIndexService: URI,
-                        bagId: BagId)
+                        bagId: BagId,
+                        userAgent: String,
+                       )
 }
