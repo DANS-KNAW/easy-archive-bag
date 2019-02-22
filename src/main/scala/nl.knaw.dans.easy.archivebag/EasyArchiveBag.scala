@@ -82,7 +82,9 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
 
   private def addBagToIndex(bagId: BagId)(implicit ps: Parameters): Try[Unit] = Try {
     val http = createHttpClient(ps.bagIndexService.getHost, ps.bagIndexService.getPort, "", "")
-    val put = new HttpPut(ps.bagIndexService.resolve(s"bags/$bagId").toASCIIString)
+    val put = new HttpPut(ps.bagIndexService.resolve(s"bags/$bagId").toASCIIString) {
+      addHeader("User-Agent", ps.userAgent)
+    }
     logger.info(s"Adding new bag to bag index with request: ${ put.toString }")
     val response = http.execute(put)
     val statusLine = response.getStatusLine
@@ -155,6 +157,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       put = new HttpPut(s.storageDepositService.toURI.resolve("bags/").resolve(s.bagId.toString)) {
         addHeader("Content-Disposition", "attachment; filename=bag.zip")
         addHeader("Content-MD5", md5Hex)
+        addHeader("User-Agent", s.userAgent)
         setEntity(new FileEntity(file, ContentType.create("application/zip")))
       }
     } yield managed(http execute put)
