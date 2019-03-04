@@ -22,16 +22,19 @@ import scalaj.http.HttpRequest
 
 import scala.annotation.tailrec
 
+// TODO submitted a PR to scalaj-http for adding this functionality.
+//      https://github.com/scalaj/scalaj-http/pull/188
+//  once this is merged, we can remove this class here
 case class InputStreamBodyConnectFunc(inputStream: InputStream) extends ((HttpRequest, HttpURLConnection) => Unit) {
   def apply(req: HttpRequest, conn: HttpURLConnection): Unit = {
     conn.setDoOutput(true)
     conn.connect()
 
-    readOnce(new Array[Byte](req.sendBufferSize), conn.getOutputStream, 0L)
+    recursive(new Array[Byte](req.sendBufferSize), conn.getOutputStream, 0L)
   }
 
   @tailrec
-  private def readOnce(buffer: Array[Byte], out: OutputStream, writtenBytes: Long): Unit = {
+  private def recursive(buffer: Array[Byte], out: OutputStream, writtenBytes: Long): Unit = {
     val len = inputStream.read(buffer)
     var bytesWritten = writtenBytes
     if (len > 0) {
@@ -40,7 +43,7 @@ case class InputStreamBodyConnectFunc(inputStream: InputStream) extends ((HttpRe
     }
 
     if (len >= 0)
-      readOnce(buffer, out, bytesWritten)
+      recursive(buffer, out, bytesWritten)
   }
 
   override def toString = s"InputStreamBodyConnectFunc($inputStream)"
