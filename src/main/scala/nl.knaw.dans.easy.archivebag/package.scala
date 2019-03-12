@@ -20,6 +20,8 @@ import java.net.{ URI, URL }
 import java.nio.file.Path
 import java.util.UUID
 
+import scalaj.http.{ BaseHttp, HttpOptions }
+
 package object archivebag {
   case class NotABagDirException(bagDir: Path, cause: Throwable) extends Exception(s"A bag could not be loaded at $bagDir", cause)
   case class BagReaderException(bagDir: Path, cause: Throwable) extends Exception(s"The bag at '$bagDir' could not be read: ${ cause.getMessage }", cause)
@@ -36,5 +38,12 @@ package object archivebag {
                         bagIndexService: URI,
                         bagId: BagId,
                         userAgent: String,
-                       )
+                       ) {
+    lazy val http = new BaseHttp(
+      userAgent = userAgent,
+      options = Seq(
+        // no timeouts
+        HttpOptions.followRedirects(false),
+      ))
+  }
 }
