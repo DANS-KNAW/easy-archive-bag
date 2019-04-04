@@ -148,7 +148,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
       response <- Using.fileInputStream(file)
         .map(fileStream => {
           s.http(s.storageDepositService.toURI.resolve("bags/").resolve(s.bagId.toString).toASCIIString)
-            .copy(connectFunc = InputStreamBodyConnectFunc(fileStream))
+            .copy(connectFunc = InputStreamBodyConnectFunc(fileStream, Option(file.length)))
             .header("Content-Disposition", "attachment; filename=bag.zip")
             .header("Content-MD5", md5Hex)
             .header("Content-Type", "application/zip")
