@@ -85,7 +85,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     response.code match {
       case 201 => ()
       case _ =>
-        logger.error(s"${ ps.storageDepositService } returned:[ ${ response.statusLine } ] while adding new bag to bag index. Body = ${ response.body }")
+        logger.error(s"${ ps.bagIndexService } returned:[ ${ response.statusLine } ] while adding new bag to bag index. Body = ${ response.body }")
         throw new IllegalStateException("Error trying to add bag to index")
     }
   }
