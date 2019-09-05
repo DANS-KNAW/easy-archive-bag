@@ -43,6 +43,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   }
 
   def run(implicit ps: Parameters): Try[URI] = {
+    logger.info(s"[${ps.bagId}] Archiving bag")
     for {
       maybeVersionOfId <- bagFacade.getIsVersionOf(ps.bagDir.toPath)
       _ <- maybeVersionOfId.map(createRefBagsTxt).getOrElse(Success(()))
@@ -121,17 +122,17 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     FileUtils.write(bagDir.resolve("refbags.txt").toFile, refBagsTxt, "UTF-8")
   }
 
-  private def generateUncreatedTempFile()(implicit ps: Parameters): Try[File] = Try {
-    val tempFile = File.createTempFile("easy-archive-bag-", ".zip", ps.tempDir)
+  private def generateUncreatedTempFile()(implicit tempDir: File): Try[File] = Try {
+    val tempFile = File.createTempFile("easy-archive-bag-", ".zip", tempDir)
     tempFile.delete()
     debug(s"Generated unique temporary file name: $tempFile")
     tempFile
   } recoverWith {
-    case NonFatal(e) => Failure(new IOException(s"Could not create temp file in ${ ps.tempDir }: ${ e.getMessage }", e))
+    case NonFatal(e) => Failure(new IOException(s"Could not create temp file in $tempDir: ${ e.getMessage }", e))
   }
 
-  private def zipDir(dir: File, zip: File): Try[Unit] = Try {
-    debug(s"Zipping directory $dir to file $zip")
+  private def zipDir(dir: File, zip: File)(implicit bagId: BagId): Try[Unit] = Try {
+    logger.info(s"[$bagId] Zipping directory $dir to file $zip")
     if (zip.exists) zip.delete
     val zf = new ZipFile(zip) {
       setFileNameCharset(StandardCharsets.UTF_8.name)
