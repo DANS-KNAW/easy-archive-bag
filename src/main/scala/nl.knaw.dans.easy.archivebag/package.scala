@@ -46,4 +46,7 @@ package object archivebag {
         HttpOptions.followRedirects(false),
       ))
   }
+
+  implicit def bagId(implicit ps: Parameters): BagId = ps.bagId
+  implicit def tempDir(implicit ps: Parameters): File = ps.tempDir
 }
