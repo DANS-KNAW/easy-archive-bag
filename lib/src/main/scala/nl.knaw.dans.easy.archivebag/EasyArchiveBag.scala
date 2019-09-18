@@ -37,11 +37,6 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
 
   override val bagFacade = new Bagit5Facade()
 
-  def main(args: Array[String]): Unit = {
-    implicit val settings: Parameters = CommandLineOptions.parse(args)
-    run.unsafeGetOrThrow
-  }
-
   def run(implicit ps: Parameters): Try[URI] = {
     logger.info(s"[${ps.bagId}] Archiving bag")
     for {
