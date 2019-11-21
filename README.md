@@ -36,16 +36,6 @@ ARGUMENTS
       uuid (required)                  Identifier for the bag in archival storage
       bag-store-url (required)         base url to the store in which the bag needs to be archived
 
-INSTALLATION AND CONFIGURATION
-------------------------------
-The preferred way of install this module is using the RPM package. This will install the binaries to
-`/opt/dans.knaw.nl/easy-archive-bag`, the configuration files to `/etc/opt/dans.knaw.nl/easy-archive-bag`,
-and will install the service script for `initd` or `systemd`. It will also set up a default bag store
-at `/srv/dans.kanw.nl/bag-store`.
-
-If you are on a system that does not support RPM, you can use the tarball. You will need to copy the
-service scripts to the appropriate locations yourself.
-
 BUILDING FROM SOURCE
 --------------------
 
