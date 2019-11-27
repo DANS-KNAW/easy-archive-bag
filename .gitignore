@@ -1,8 +1,8 @@
-/target/
+target/
 /pom.xml.tag
 /pom.xml.releaseBackup
 /pom.xml.versionsBackup
-/pom.xml.next
+/pom.xml.nextß
 /release.properties
 /dependency-reduced-pom.xml
 /buildNumber.properties
@@ -10,7 +10,7 @@
 *.class
 *~
 *.swp
-/*.iml
+*.iml
 *.sc
 /.idea/
 .DS_Store

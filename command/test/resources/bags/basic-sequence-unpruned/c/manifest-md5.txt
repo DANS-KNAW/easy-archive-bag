@@ -1,0 +1,24 @@
+====
+    Copyright (C) 2015 DANS - Data Archiving and Networked Services (info@dans.knaw.nl)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+====
+
+f17a8c16d88784eb3853dc4ae6633ad2  data/sub/w
+4377fdf3a848177e41cbd9316f2172f2  data/x
+83bcb3dcc9006d791f82ce04d1e00b2d  data/z
+0bc204d0474463beb1a116fc67b0c53f  data/y
+b2fa761d13ce7dcb0f3738a4dcbfd9e8  data/y-old
+a7849536df2c23380bd0997b737db506  data/sub-copy/u
+a2d461a2feb3c414a1d0152be8c69e33  data/p
+6266ed8807da0878dd1e17940ab899e2  data/sub/q
