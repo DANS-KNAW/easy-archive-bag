@@ -16,9 +16,9 @@
 /.idea/
 .DS_Store
 /apphome.sh
-/home/
-/data/
-/data-*/
+/command/home/
+/command/data/
+/command/data-*/
 /.vagrant/
 /.yum-repo
 /.dans.knaw.nl-yum-repo
