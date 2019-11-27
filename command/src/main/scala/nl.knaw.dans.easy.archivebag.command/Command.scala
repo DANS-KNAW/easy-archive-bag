@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.easy.archivebag
+package nl.knaw.dans.easy.archivebag.command
 
 import nl.knaw.dans.lib.error._
+
+import nl.knaw.dans.easy.archivebag.{Parameters, EasyArchiveBag}
 
 object Command {
 

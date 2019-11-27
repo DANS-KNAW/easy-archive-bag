@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.easy.archivebag
+package nl.knaw.dans.easy.archivebag.command
 
 import java.io.File
 import java.net.{ MalformedURLException, URI, URL }
@@ -22,6 +22,8 @@ import java.util.UUID
 
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.rogach.scallop.{ ScallopConf, ScallopOption, ValueConverter, singleArgConverter }
+
+import nl.knaw.dans.easy.archivebag.Parameters
 
 object CommandLineOptions extends DebugEnhancedLogging {
   def parse(args: Array[String]): Parameters = {
