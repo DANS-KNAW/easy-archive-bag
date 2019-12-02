@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-DATADIR=command/data
+DATADIR=data
 
 touch $DATADIR/easy-archive-bag.log
 
@@ -24,6 +24,6 @@ mkdir -p $DATADIR/easy-archive-bag-staging
 
 echo "Copy bags to $DATADIR..."
 mkdir $DATADIR/bags
-cp -r command/src/test/resources/bags/basic-sequence-unpruned $DATADIR/bags/basic-sequence-unpruned
+cp -r src/test/resources/bags/basic-sequence-unpruned $DATADIR/bags/basic-sequence-unpruned
 
 echo "OK"
