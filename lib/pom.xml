@@ -29,7 +29,7 @@
     <groupId>nl.knaw.dans.easy</groupId>
     <artifactId>easy-archive-bag-lib</artifactId>
     <name>EASY Archive Bag Library</name>
-    <version>2.0.0</version>
+    <version>2.0.1-SNAPSHOT</version>
     <inceptionYear>2015</inceptionYear>
     
     <dependencies>
@@ -106,8 +106,4 @@
             <url>https://maven.dans.knaw.nl/snapshots/</url>
         </repository>
     </repositories>
-
-  <scm>
-    <tag>v2.0.0</tag>
-  </scm>
 </project>
