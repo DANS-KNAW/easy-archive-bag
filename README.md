@@ -36,6 +36,14 @@ ARGUMENTS
       uuid (required)                  Identifier for the bag in archival storage
       bag-store-url (required)         base url to the store in which the bag needs to be archived
 
+
+INSTALLATION AND CONFIGURATION
+------------------------------
+Currently this project is build only as an RPM package for RHEL7/CentOS7 and later. The RPM will install the binaries to
+`/opt/dans.knaw.nl/easy-archive-bag`, the configuration files to `/etc/opt/dans.knaw.nl/easy-archive-bag`,
+and will install the service script for `systemd`.
+
+
 BUILDING FROM SOURCE
 --------------------
 
