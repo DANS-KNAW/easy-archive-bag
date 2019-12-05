@@ -40,9 +40,11 @@ ARGUMENTS
 INSTALLATION AND CONFIGURATION
 ------------------------------
 Currently this project is build only as an RPM package for RHEL7/CentOS7 and later. The RPM will install the binaries to
-`/opt/dans.knaw.nl/easy-archive-bag`, the configuration files to `/etc/opt/dans.knaw.nl/easy-archive-bag`,
-and will install the service script for `systemd`.
+`/opt/dans.knaw.nl/easy-archive-bag` and the configuration files to `/etc/opt/dans.knaw.nl/easy-archive-bag`.
 
+To install the module on systems that do not support RPM, you can copy and unarchive the tarball to the target host.
+You will have to take care of placing the files in the correct locations for your system yourself. For instructions
+on building the tarball, see next section.
 
 BUILDING FROM SOURCE
 --------------------
@@ -62,3 +64,8 @@ Steps:
 If the `rpm` executable is found at `/usr/local/bin/rpm`, the build profile that includes the RPM
 packaging will be activated. If `rpm` is available, but at a different path, then activate it by using
 Maven's `-P` switch: `mvn -Pprm install`.
+
+
+Alternatively, to build the tarball execute:
+
+    mvn clean install assembly:single
