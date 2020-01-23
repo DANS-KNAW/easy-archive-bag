@@ -25,6 +25,7 @@ import gov.loc.repository.bagit.domain.Bag
 import gov.loc.repository.bagit.exceptions._
 import gov.loc.repository.bagit.reader.BagReader
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
+import nl.knaw.dans.lib.string._
 
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
@@ -80,7 +81,7 @@ trait Bagit5FacadeComponent extends BagFacadeComponent {
         val uuidPart = uri.getSchemeSpecificPart
         val parts = uuidPart.split(':')
         if (parts.length != 2) Failure(InvalidIsVersionOfException(uri.toASCIIString))
-        else Try { UUID.fromString(parts(1)) }
+        else parts(1).toUUID.toTry
       }
       else Failure(InvalidIsVersionOfException(uri.toASCIIString))
     }
