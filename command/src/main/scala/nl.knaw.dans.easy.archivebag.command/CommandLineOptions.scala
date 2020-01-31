@@ -20,10 +20,10 @@ import java.net.{ MalformedURLException, URI, URL }
 import java.nio.file.Paths
 import java.util.UUID
 
+import nl.knaw.dans.easy.archivebag.{ BagId, Parameters }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.rogach.scallop.{ ScallopConf, ScallopOption, ValueConverter, singleArgConverter }
-
-import nl.knaw.dans.easy.archivebag.Parameters
+import nl.knaw.dans.lib.string._
+import org.rogach.scallop.{ ScallopConf, ScallopOption, ValueConverter, singleArgConverter, stringConverter }
 
 object CommandLineOptions extends DebugEnhancedLogging {
   def parse(args: Array[String]): Parameters = {
@@ -41,8 +41,8 @@ object CommandLineOptions extends DebugEnhancedLogging {
       tempDir = new File(configuration.properties.getString("tempdir")),
       storageDepositService = cmd.bagStoreUrl(),
       bagIndexService = new URI(configuration.properties.getString("bag-index.uri")),
-      bagId = UUID.fromString(cmd.uuid()),
-      userAgent = s"easy-archive-bag/${configuration.version}",
+      bagId = cmd.uuid(),
+      userAgent = s"easy-archive-bag/${ configuration.version }",
     )
 
     debug(s"Using the following settings: $settings")
@@ -53,6 +53,7 @@ object CommandLineOptions extends DebugEnhancedLogging {
 
 class ScallopCommandLine(configuration: Configuration, args: Array[String]) extends ScallopConf(args) {
 
+  private implicit val uuidParser: ValueConverter[UUID] = stringConverter.flatMap(_.toUUID.fold(e => Left(e.getMessage), uuid => Right(Option(uuid))))
   private implicit val urlConverter: ValueConverter[URL] = singleArgConverter(s => new URL(addTrailingSlashIfNeeded(s)), {
     case e: MalformedURLException => Left(s"bad URL, ${ e.getMessage }")
   })
@@ -94,7 +95,7 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
     descr = "Directory in BagIt format that will be sent to archival storage",
   )
 
-  val uuid: ScallopOption[String] = trailArg[String](
+  val uuid: ScallopOption[BagId] = trailArg[BagId](
     name = "uuid",
     descr = "Identifier for the bag in archival storage",
   )
