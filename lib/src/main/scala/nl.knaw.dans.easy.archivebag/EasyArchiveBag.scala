@@ -20,7 +20,7 @@ import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
-import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -129,9 +129,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   private def zipDir(dir: File, zip: File)(implicit bagId: BagId): Try[Unit] = Try {
     logger.info(s"[$bagId] Zipping directory $dir to file $zip")
     if (zip.exists) zip.delete
-    val zf = new ZipFile(zip) {
-      setFileNameCharset(StandardCharsets.UTF_8.name)
-    }
+    val zf = new ZipFile(zip)
     val parameters = new ZipParameters
     zf.addFolder(dir, parameters)
   }
