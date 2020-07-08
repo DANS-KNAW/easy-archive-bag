@@ -43,6 +43,9 @@ object CommandLineOptions extends DebugEnhancedLogging {
       bagIndexService = new URI(configuration.properties.getString("bag-index.uri")),
       bagId = cmd.uuid(),
       userAgent = s"easy-archive-bag/${ configuration.version }",
+      bagStoreBaseUrl = new URI(configuration.properties.getString("bagstore-service.base-url")),
+      connectionTimeoutMs = configuration.properties.getInt("bagstore-service.connection-timeout-milliseconds", 1000),
+      readTimeoutMs = configuration.properties.getInt("bagstore-service.read-timeout-milliseconds", 5000),
     )
 
     debug(s"Using the following settings: $settings")
