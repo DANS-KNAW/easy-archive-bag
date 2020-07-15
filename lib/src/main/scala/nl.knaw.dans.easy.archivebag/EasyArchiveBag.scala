@@ -16,7 +16,7 @@
 package nl.knaw.dans.easy.archivebag
 
 import java.io.{ File, IOException }
-import java.net.URI
+import java.net.{ URI, URL }
 import java.nio.file.Path
 
 import net.lingala.zip4j.ZipFile
@@ -37,6 +37,8 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   override val bagFacade = new Bagit5Facade()
 
   def run(implicit ps: Parameters): Try[URI] = {
+    implicit val bagStore: BagStore = BagStore(ps.bagStoreBaseUrl, ps.connectionTimeoutMs, ps.readTimeoutMs)
+    implicit val storageDepositService: URL = ps.storageDepositService
     logger.info(s"[${ ps.bagId }] Archiving bag")
     for {
       bagInfo <- bagFacade.getBagInfo(ps.bagDir.toPath)
@@ -51,18 +53,17 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     } yield location
   }
 
-  private def handleIsVersionOf(versionOfId: BagId, bagInfo: Map[String, String])(implicit ps: Parameters): Try[Unit] = {
-    val bagStore = BagStore(ps.bagStoreBaseUrl, ps.connectionTimeoutMs, ps.readTimeoutMs)
+  private def handleIsVersionOf(versionOfId: BagId, bagInfo: Map[String, String])(implicit bagStore: BagStore, storageDepositService: URL): Try[Unit] = {
     for {
-      _ <- checkSameUser(bagStore, versionOfId, bagInfo)
-      _ <- checkSameStore(bagStore, versionOfId)
+      _ <- checkSameUser(versionOfId, bagInfo)
+      _ <- checkSameStore(versionOfId)
     } yield ()
   }
 
-  private def checkSameUser(bagStore: BagStore, versionOfId: BagId, bagInfo: Map[String, String]): Try[Unit] = Try {
+  private def checkSameUser(versionOfId: BagId, bagInfo: Map[String, String])(implicit bagStore: BagStore): Try[Unit] = Try {
     for {
       infoText <- bagStore.getBagInfoText(versionOfId)
-      userReferredBag <- getUser(versionOfId, infoText.lines.filter(_.startsWith("EASY-User-Account")))
+      userReferredBag <- getUser(versionOfId, getUserLines(infoText))
       _ = bagInfo.get("EASY-User-Account")
         .map(userThisBag =>
           if (userThisBag != userReferredBag)
@@ -70,20 +71,24 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     } yield ()
   }
 
-  private def getUser(versionOfId: BagId, userLines: Iterator[String]): Try[String] = {
+  def getUser(versionOfId: BagId, userLines: Iterator[String]): Try[String] = {
     if (userLines.hasNext) {
       val userLine = userLines.next
-      Try(userLine.substring(userLine.indexOf(":")).trim)
+      Try(userLine.substring(userLine.indexOf(":") + 1).trim)
     }
     else
       Failure(NoUserException(versionOfId))
   }
 
-  private def checkSameStore(bagStore: BagStore, versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = Try {
+  def getUserLines(infoText: String): Iterator[String] = {
+    infoText.lines.filter(_.startsWith("EASY-User-Account"))
+  }
+
+  private def checkSameStore(versionOfId: BagId)(implicit bagStore: BagStore, storageDepositService: URL): Try[Unit] = Try {
     for {
-      sameStore <- bagStore.bagExists(ps.storageDepositService, versionOfId)
+      sameStore <- bagStore.bagExists(storageDepositService, versionOfId)
       _ = if (!sameStore)
-            Failure(DifferentStoreException(ps.storageDepositService, versionOfId))
+            Failure(DifferentStoreException(storageDepositService, versionOfId))
     } yield ()
   }
 
