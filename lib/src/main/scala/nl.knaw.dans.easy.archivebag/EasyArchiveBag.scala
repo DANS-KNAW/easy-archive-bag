@@ -102,7 +102,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
                 location
             })
       case 401 =>
-        Failure(UnautherizedException(ps.bagId))
+        Failure(UnauthorizedException(ps.bagId))
       case _ =>
         logger.error(s"${ ps.storageDepositService } returned:[ ${ response.statusLine } ]. Body = ${ response.body }")
         Failure(new RuntimeException(s"Bag archiving failed: ${ response.statusLine }"))

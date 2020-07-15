@@ -33,12 +33,12 @@ trait BagStore extends DebugEnhancedLogging {
         .asString
     }
       .flatMap {
-      case HttpResponse(body, 200, _) =>
-        Success(body)
-      case HttpResponse(body, code, _) =>
-        logger.error(s"call to $url failed: $code - $body")
-        Failure(BagStoreException(url, code))
-    }
+        case HttpResponse(body, 200, _) =>
+          Success(body)
+        case HttpResponse(body, code, _) =>
+          logger.error(s"call to $url failed: $code - $body")
+          Failure(BagStoreException(url, code))
+      }
   }
 
   /**

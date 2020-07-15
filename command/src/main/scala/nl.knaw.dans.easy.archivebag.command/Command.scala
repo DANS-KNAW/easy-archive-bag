@@ -15,9 +15,8 @@
  */
 package nl.knaw.dans.easy.archivebag.command
 
+import nl.knaw.dans.easy.archivebag.{ EasyArchiveBag, Parameters }
 import nl.knaw.dans.lib.error._
-
-import nl.knaw.dans.easy.archivebag.{Parameters, EasyArchiveBag}
 
 object Command {
 

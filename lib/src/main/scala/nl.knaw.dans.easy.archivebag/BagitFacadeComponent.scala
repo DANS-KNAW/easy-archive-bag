@@ -34,10 +34,7 @@ import scala.util.{ Failure, Success, Try }
 trait BagFacadeComponent {
 
   val bagFacade: BagFacade
-
   val IS_VERSION_OF_KEY = "Is-Version-Of"
-  val EASY_USER_ACCOUNT = "EASY-User-Account"
-
 
   trait BagFacade {
     def getIsVersionOf(bagDir: Path): Try[Option[BagId]]
