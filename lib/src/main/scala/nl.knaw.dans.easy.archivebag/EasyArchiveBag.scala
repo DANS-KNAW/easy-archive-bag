@@ -61,13 +61,19 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
 
   private def checkSameUser(bagStore: BagStore, versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
     for {
-      infoText <- bagStore.getBagInfoText(versionOfId)
-      userReferredBag <- getUser(versionOfId, getUserLines(infoText))
-      _ <- sameUser(ps.username, userReferredBag, versionOfId)
+      thisUser <- getThisUser()
+      referredBagInfoText <- bagStore.getBagInfoText(versionOfId)
+      referredBagUser <- getReferredBagUser(versionOfId, getUserLines(referredBagInfoText))
+      _ <- sameUser(thisUser, referredBagUser, versionOfId)
     } yield ()
   }
 
-  def getUser(versionOfId: BagId, userLines: Iterator[String]): Try[String] = {
+  private def getThisUser()(implicit ps: Parameters): Try[String] = {
+    bagFacade.getBagInfo(ps.bagDir.toPath)
+      .map(_.getOrElse("EASY-User-Account", ""))
+  }
+
+  def getReferredBagUser(versionOfId: BagId, userLines: Iterator[String]): Try[String] = {
     if (userLines.hasNext) {
       val userLine = userLines.next
       Try(userLine.substring(userLine.indexOf(":") + 1).trim)
@@ -80,7 +86,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
     infoText.lines.filter(_.startsWith("EASY-User-Account"))
   }
 
-  def sameUser(user: String, referredUser: String, versionOfId: BagId): Try[Unit] = {
+  private def sameUser(user: String, referredUser: String, versionOfId: BagId): Try[Unit] = {
     if (user != referredUser)
       Failure(DifferentUserException(user, referredUser, versionOfId))
     else
