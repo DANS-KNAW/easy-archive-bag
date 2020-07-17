@@ -9,15 +9,21 @@ SYNOPSIS
 --------
 
     easy-archive-bag [--user|-u <user>][--password,-p <password] \
-                       <bag-directory> <uuid> [<bag-store-service-url>]
+                       <bag-directory> <uuid> <bag-store-service-url>
 
 
 DESCRIPTION
 -----------
 
 Takes a directory in BagIt format, zips it and sends it via an HTTP `PUT` request to 
-`bag-store-url/<uuid>`. If the `bag-info.txt` contains an entry `Is-Version-Of` the
-value must be a valid bag-id. Note that the `bag-store-url` only contains the base
+`bag-store-url/<uuid>`. 
+
+If the `bag-info.txt` contains an entry `Is-Version-Of`:
+  * the value must be a valid bag-id
+  * the `EASY-User-Account` in the referred bag has to be the same as current user
+  * the referred bag has to be in the store as the new bag
+  
+Note that the `bag-store-url` only contains the base
 URL of the bag store, e.g. `http://myarchive/bagstores/mybagstore`.
 
 
