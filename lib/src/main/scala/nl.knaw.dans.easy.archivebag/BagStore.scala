@@ -57,7 +57,7 @@ trait BagStore extends DebugEnhancedLogging {
   }
 
   /**
-   * Checks existence of bag info.txt for a given UUID.
+   * Checks existence of a bag for a given UUID in a given store.
    *
    * @param storeUrl url to the store where to look for the bag
    * @param bagId    the bag-id of the bag
@@ -65,7 +65,7 @@ trait BagStore extends DebugEnhancedLogging {
    */
   def bagExists(storeUrl: URL, bagId: BagId): Try[Boolean] = {
     trace(bagId)
-    val bagUrl = storeUrl.toURI.resolve(s"$bagId").toASCIIString
+    val bagUrl = storeUrl.toURI.resolve(s"bags/$bagId").toASCIIString
     debug(s"Requesting: $bagUrl")
     Try {
       Http(bagUrl)
