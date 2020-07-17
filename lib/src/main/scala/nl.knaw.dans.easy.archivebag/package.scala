@@ -41,10 +41,7 @@ package object archivebag {
                         storageDepositService: URL,
                         bagIndexService: URI,
                         bagId: BagId,
-                        userAgent: String,
-                        bagStoreBaseUrl: URI,
-                        connectionTimeoutMs: Int,
-                        readTimeoutMs: Int
+                        userAgent: String
                        ) {
     lazy val http = new BaseHttp(
       userAgent = userAgent,

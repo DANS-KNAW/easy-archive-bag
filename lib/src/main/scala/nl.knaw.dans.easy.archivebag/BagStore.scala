@@ -28,9 +28,10 @@ import scala.util.{ Failure, Success, Try }
  *  - to check existence of a bag in a specific bagstore
  */
 trait BagStore extends DebugEnhancedLogging {
-  val bagStoreBaseUrl: URI
-  val connectionTimeoutMs: Int
-  val readTimeoutMs: Int
+  val bagStoreBaseUri: URI
+  val bagStoreUri: URI
+  val connectionTimeoutMs = 1000
+  val readTimeoutMs = 5000
 
   /**
    * Fetches bag info.txt for a given UUID.
@@ -39,7 +40,7 @@ trait BagStore extends DebugEnhancedLogging {
    * @return bag info.txt
    */
   def getBagInfoText(bagId: BagId): Try[String] = {
-    val url = bagStoreBaseUrl.resolve(s"bags/$bagId/bag-info.txt").toASCIIString
+    val url = bagStoreBaseUri.resolve(s"bags/$bagId/bag-info.txt").toASCIIString
     debug(s"calling $url")
 
     Try {
@@ -57,15 +58,14 @@ trait BagStore extends DebugEnhancedLogging {
   }
 
   /**
-   * Checks existence of a bag for a given UUID in a given store.
+   * Checks existence of a bag for a given UUID in this specific store.
    *
-   * @param storeUrl url to the store where to look for the bag
    * @param bagId    the bag-id of the bag
    * @return boolean
    */
-  def bagExists(storeUrl: URL, bagId: BagId): Try[Boolean] = {
+  def bagExists(bagId: BagId): Try[Boolean] = {
     trace(bagId)
-    val bagUrl = storeUrl.toURI.resolve(s"bags/$bagId").toASCIIString
+    val bagUrl = bagStoreUri.resolve(s"bags/$bagId").toASCIIString
     debug(s"Requesting: $bagUrl")
     Try {
       Http(bagUrl)
@@ -77,15 +77,15 @@ trait BagStore extends DebugEnhancedLogging {
       .flatMap {
         case code if (code == 200 || code == 201) => Success(true)
         case code if (code == 404) => Success(false)
-        case code: Int => Failure(new Exception(s"Reading from store $storeUrl failed, HTTP code: $code"))
+        case code: Int => Failure(new Exception(s"Reading from store $bagStoreUri failed, HTTP code: $code"))
       }
   }
 }
 
 object BagStore {
-  def apply(baseUrl: URI, cto: Int, rto: Int): BagStore = new BagStore() {
-    override val bagStoreBaseUrl: URI = baseUrl
-    override val connectionTimeoutMs: Int = cto
-    override val readTimeoutMs: Int = rto
+  def apply(storeUrl: URL): BagStore = new BagStore() {
+    private val s = storeUrl.toString
+    override val bagStoreBaseUri: URI = new URI(s.substring(0,s.indexOf("/stores") + 1))
+    override val bagStoreUri: URI = storeUrl.toURI
   }
 }

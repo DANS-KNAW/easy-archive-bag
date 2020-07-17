@@ -51,7 +51,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   }
 
   private def handleIsVersionOf(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
-    val bagStore: BagStore = BagStore(ps.bagStoreBaseUrl, ps.connectionTimeoutMs, ps.readTimeoutMs)
+    val bagStore: BagStore = BagStore(ps.storageDepositService)
     for {
       _ <- checkSameUser(bagStore, versionOfId)
       _ <- checkSameStore(bagStore, versionOfId)
@@ -88,7 +88,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   }
 
   private def checkSameStore(bagStore: BagStore, versionOfId: BagId)(implicit ps: Parameters): Try[Boolean] = {
-    val exists = bagStore.bagExists(ps.storageDepositService, versionOfId)
+    val exists = bagStore.bagExists(versionOfId)
     if (exists.filter(_ == false).isSuccess)
       Failure(DifferentStoreException(ps.storageDepositService, versionOfId))
     else
