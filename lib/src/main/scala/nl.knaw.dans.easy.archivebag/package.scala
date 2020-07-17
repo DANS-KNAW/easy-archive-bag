@@ -41,7 +41,7 @@ package object archivebag {
                         storageDepositService: URL,
                         bagIndexService: URI,
                         bagId: BagId,
-                        userAgent: String
+                        userAgent: String,
                        ) {
     lazy val http = new BaseHttp(
       userAgent = userAgent,
@@ -50,8 +50,6 @@ package object archivebag {
         HttpOptions.followRedirects(false),
       ))
   }
-
-  case class BagFile(path: Path, checksum: String)
 
   implicit def bagId(implicit ps: Parameters): BagId = ps.bagId
 
