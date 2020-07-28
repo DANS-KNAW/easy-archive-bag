@@ -25,12 +25,8 @@ import scalaj.http.{ BaseHttp, HttpOptions }
 package object archivebag {
   case class NotABagDirException(bagDir: Path, cause: Throwable) extends Exception(s"A bag could not be loaded at $bagDir", cause)
   case class BagReaderException(bagDir: Path, cause: Throwable) extends Exception(s"The bag at '$bagDir' could not be read: ${ cause.getMessage }", cause)
-  case class BagStoreException(url: String, code: Int) extends Exception(s"Could not be read from bagstore, at '$url' (code: $code)")
   case class InvalidIsVersionOfException(value: String) extends Exception(s"Unsupported value in the bag-info.txt field Is-Version-Of: $value")
-  case class DifferentUserException(user: String, userReferredBag: String, versionOfId: BagId) extends Exception(s"User $user is different from the user $userReferredBag in bag $versionOfId")
-  case class DifferentStoreException(storeUrl: URL, versionOfId: BagId) extends Exception(s"IsVersionOf bag $versionOfId is not in the same store $storeUrl as the bag that refers to it")
-  case class NoUserException(versionOfId: BagId) extends Exception(s"No user found for isVersionOfBag $versionOfId")
-  case class UnauthorizedException(bagId: BagId) extends Exception(s"No or invalid credentials provided for storage deposit service while depositing bag $bagId")
+  case class UnautherizedException(bagId: BagId) extends Exception(s"No or invalid credentials provided for storage deposit service while depositing bag $bagId")
 
   type BagId = UUID
 
@@ -52,6 +48,5 @@ package object archivebag {
   }
 
   implicit def bagId(implicit ps: Parameters): BagId = ps.bagId
-
   implicit def tempDir(implicit ps: Parameters): File = ps.tempDir
 }
