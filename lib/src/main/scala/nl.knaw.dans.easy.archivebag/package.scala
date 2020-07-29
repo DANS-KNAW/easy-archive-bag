@@ -27,6 +27,7 @@ package object archivebag {
   case class BagReaderException(bagDir: Path, cause: Throwable) extends Exception(s"The bag at '$bagDir' could not be read: ${ cause.getMessage }", cause)
   case class InvalidIsVersionOfException(value: String) extends Exception(s"Unsupported value in the bag-info.txt field Is-Version-Of: $value")
   case class UnautherizedException(bagId: BagId) extends Exception(s"No or invalid credentials provided for storage deposit service while depositing bag $bagId")
+  case class BagValidationException(bagId: BagId, msg: String) extends Exception(s"Validation of bag $bagId failed. Cause: $msg")
 
   type BagId = UUID
 
@@ -36,6 +37,8 @@ package object archivebag {
                         tempDir: File,
                         storageDepositService: URL,
                         bagIndexService: URI,
+                        validateDansBagService: URI,
+                        readTimeOut: Int,
                         bagId: BagId,
                         userAgent: String,
                        ) {

@@ -41,6 +41,8 @@ object CommandLineOptions extends DebugEnhancedLogging {
       tempDir = new File(configuration.properties.getString("tempdir")),
       storageDepositService = cmd.bagStoreUrl(),
       bagIndexService = new URI(configuration.properties.getString("bag-index.uri")),
+      validateDansBagService = new URI(configuration.properties.getString("validate-bag.uri")),
+      readTimeOut = configuration.properties.getString("validate-bag.read-timeout").toInt,
       bagId = cmd.uuid(),
       userAgent = s"easy-archive-bag/${ configuration.version }"
     )
