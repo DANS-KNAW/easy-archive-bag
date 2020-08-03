@@ -74,7 +74,7 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
     s"""
        |Send a bag to archival storage.
        |
-       |Usage: $printedName <bag-directory> <uuid> [<storage-service-url>]
+       |Usage: $printedName <bag-directory> <uuid> <storage-service-url>
        |Options:
        |""".stripMargin)
 
