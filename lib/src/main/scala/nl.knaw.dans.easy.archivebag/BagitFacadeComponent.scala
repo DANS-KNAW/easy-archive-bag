@@ -34,7 +34,6 @@ import scala.util.{ Failure, Success, Try }
 trait BagFacadeComponent {
 
   val bagFacade: BagFacade
-
   val IS_VERSION_OF_KEY = "Is-Version-Of"
 
   trait BagFacade {

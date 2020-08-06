@@ -41,8 +41,10 @@ object CommandLineOptions extends DebugEnhancedLogging {
       tempDir = new File(configuration.properties.getString("tempdir")),
       storageDepositService = cmd.bagStoreUrl(),
       bagIndexService = new URI(configuration.properties.getString("bag-index.uri")),
+      validateDansBagService = new URI(configuration.properties.getString("validate-bag.uri")),
+      readTimeOut = configuration.properties.getString("validate-bag.read-timeout").toInt,
       bagId = cmd.uuid(),
-      userAgent = s"easy-archive-bag/${ configuration.version }",
+      userAgent = s"easy-archive-bag/${ configuration.version }"
     )
 
     debug(s"Using the following settings: $settings")
@@ -72,7 +74,7 @@ class ScallopCommandLine(configuration: Configuration, args: Array[String]) exte
     s"""
        |Send a bag to archival storage.
        |
-       |Usage: $printedName <bag-directory> <uuid> [<storage-service-url>]
+       |Usage: $printedName <bag-directory> <uuid> <storage-service-url>
        |Options:
        |""".stripMargin)
 

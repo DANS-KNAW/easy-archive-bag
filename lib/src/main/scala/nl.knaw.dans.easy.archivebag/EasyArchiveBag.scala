@@ -17,14 +17,15 @@ package nl.knaw.dans.easy.archivebag
 
 import java.io.{ File, IOException }
 import java.net.URI
-import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
+import nl.knaw.dans.easy.validate.DansBagValidationResult
 import nl.knaw.dans.lib.error._
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import nl.knaw.dans.lib.string._
+import nl.knaw.dans.lib.encode.StringEncoding
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
 import resource.Using
@@ -38,10 +39,10 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
   override val bagFacade = new Bagit5Facade()
 
   def run(implicit ps: Parameters): Try[URI] = {
-    logger.info(s"[${ps.bagId}] Archiving bag")
+    logger.info(s"[${ ps.bagId }] Archiving bag")
     for {
       maybeVersionOfId <- bagFacade.getIsVersionOf(ps.bagDir.toPath)
-      _ <- maybeVersionOfId.map(createRefBagsTxt).getOrElse(Success(()))
+      _ <- handleIsVersionOf(maybeVersionOfId)
       zippedBag <- generateUncreatedTempFile()
       _ <- zipDir(ps.bagDir, zippedBag)
       response <- putFile(zippedBag)
@@ -49,6 +50,17 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
         .doIfSuccess(_ => zippedBag.delete())
         .doIfFailure { case _ => zippedBag.delete() }
     } yield location
+  }
+
+  private def handleIsVersionOf(maybeVersionOfId: Option[BagId])(implicit ps: Parameters): Try[Unit] = {
+    if (maybeVersionOfId.isDefined) {
+      for {
+        _ <- validateBag()
+        _ <- createRefBagsTxt(maybeVersionOfId.get)
+      } yield ()
+    }
+    else
+      Success(())
   }
 
   private def handleBagStoreResponse(response: HttpResponse[String])(implicit ps: Parameters): Try[URI] = {
@@ -66,7 +78,7 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
                 location
             })
       case 401 =>
-        Failure(UnautherizedException(ps.bagId))
+        Failure(UnauthorizedException(ps.bagId))
       case _ =>
         logger.error(s"${ ps.storageDepositService } returned:[ ${ response.statusLine } ]. Body = ${ response.body }")
         Failure(new RuntimeException(s"Bag archiving failed: ${ response.statusLine }"))
@@ -84,6 +96,33 @@ object EasyArchiveBag extends Bagit5FacadeComponent with DebugEnhancedLogging {
         logger.error(s"${ ps.bagIndexService } returned:[ ${ response.statusLine } ] while adding new bag to bag index. Body = ${ response.body }")
         throw new IllegalStateException("Error trying to add bag to index")
     }
+  }
+
+  def validateBag()(implicit ps: Parameters): Try[Unit] = {
+    Try {
+      val bagDirUri = ps.bagDir.toPath.toUri.toString.escapeString
+      val bagStoreUri = ps.storageDepositService.toString.escapeString
+      val validationUrlString = s"${ ps.validateDansBagService }validate?infoPackageType=AIP&bag-store=$bagStoreUri&uri=$bagDirUri"
+      logger.info(s"Calling Dans Bag Validation Service with ${ validationUrlString }")
+      ps.http(s"${ validationUrlString }")
+        .timeout(connTimeoutMs = 10000, readTimeoutMs = ps.readTimeOut)
+        .method("POST")
+        .header("Accept", "application/json")
+        .asString
+    } flatMap {
+      case r if r.code == 200 => for {
+        result <- DansBagValidationResult.fromJson(r.body)
+        validResult <- checkDansBagValidationResult(result)
+      } yield validResult
+      case r => Failure(new RuntimeException(s"Dans Bag Validation failed (${ r.code }): ${ r.body }"))
+    }
+  }
+
+  private def checkDansBagValidationResult(result: DansBagValidationResult)(implicit ps: Parameters): Try[Unit] = {
+    if (result.isCompliant)
+      Success(())
+    else
+      Failure(BagValidationException(ps.bagId, result.ruleViolations.get.mkString))
   }
 
   private def createRefBagsTxt(versionOfId: BagId)(implicit ps: Parameters): Try[Unit] = {
