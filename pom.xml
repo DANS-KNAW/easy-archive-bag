@@ -32,7 +32,7 @@
     </properties>
     
     <scm>
-        <developerConnection>scm:git:https://github.com/DANS-KNAW/easy-archive-bag</developerConnection>
+        <developerConnection>scm:git:ssh://github.com/DANS-KNAW/easy-archive-bag</developerConnection>
         <tag>HEAD</tag>
     </scm>
     
